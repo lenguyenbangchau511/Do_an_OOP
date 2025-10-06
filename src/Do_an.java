@@ -1,4 +1,4 @@
-import java.util.*;
+import java.util.Scanner;
 
 public class Do_an {
     public static void main(String[] args) {
@@ -436,23 +436,5 @@ class Order {
 }
 
 class Payment {
-    public static void pay(Order order) {
-        System.out.println("\nThanh toán đơn hàng #" + order.orderId);
-        System.out.println("Tổng tiền: " + order.total + "đ");
-        System.out.println("Thanh toán thành công!");
-    }
-}
 
-class OrderItem {
-    FoodItem food;
-    int quantity;
-
-    public OrderItem(FoodItem food, int quantity) {
-        this.food = food;
-        this.quantity = quantity;
-    }
-
-    public void display() {
-        System.out.printf("%s x%d = %dđ\n", food.name, quantity, food.price * quantity);
-    }
 }
