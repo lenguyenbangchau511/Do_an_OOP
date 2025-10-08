@@ -1,5 +1,7 @@
 import java.util.Scanner;
-
+import java.until.*;
+import java.io.*;
+import java.time.LocalDateTime;
 public class Do_an {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
@@ -118,7 +120,24 @@ class Customer extends User {
     System.out.println("Cảm ơn " + name + " đã đặt món.");
     }
 }
+public Payment payOrder(Order order) {
+    Scanner sc = new Scanner(System.in);
+    System.out.println("\n===== THANH TOÁN =====");
+    System.out.println("1. Tiền mặt");
+    System.out.println("2. Chuyển khoản");
+    System.out.print("Chọn phương thức (1-2): ");
+    int choice = Integer.parseInt(sc.nextLine());
+    String method = switch (choice) {
+        case 1 -> "Tiền mặt";
+        case 2 -> "Chuyển khoản";
+        default -> "Khác";
+    };
 
+    Payment payment = new Payment(order.orderId, this.name, method, order.total);
+    System.out.println("Thanh toán thành công bằng " + method + "!");
+    payment.display();
+    return payment;
+}
 class Admin extends User {
     String name, phonenumber;
 
@@ -436,7 +455,34 @@ class Order {
 }
 
 class Payment {
+    static int paymentCount = 0;
+    int paymentId;
+    int orderId;
+    String customerName;
+    String method;  // Tiền mặt, Momo, Chuyển khoản, v.v
+    int amount;
+    boolean isPaid;
+    LocalDateTime paymentTime;
 
+    public Payment(int orderId, String customerName, String method, int amount) {
+        this.paymentId = ++paymentCount;
+        this.orderId = orderId;
+        this.customerName = customerName;
+        this.method = method;
+        this.amount = amount;
+        this.isPaid = true;
+        this.paymentTime = LocalDateTime.now();
+    }
+
+    public void display() {
+        System.out.println("\n===== THANH TOÁN #" + paymentId + " =====");
+        System.out.println("Đơn hàng: " + orderId);
+        System.out.println("Khách hàng: " + customerName);
+        System.out.println("Hình thức: " + method);
+        System.out.println("Số tiền: " + amount + "đ");
+        System.out.println("Thời gian: " + paymentTime);
+        System.out.println("Trạng thái: " + (isPaid ? "Đã thanh toán" : "Chưa thanh toán"));
+    }
 }
 // Ghi nhập và đọc file
 // Ở đây dùng filename là để khi chạy code có thể tự do dặt tên file , không cần cố định tên file
@@ -529,3 +575,40 @@ class FileManager {
         }
         return foods;
     }
+    // Ghi danh sách thanh toán vào file
+    public static void writePaymentsToFile(ArrayList<Payment> payments, String filename) {
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
+        for (Payment p : payments) {
+            bw.write(p.paymentId + "," + p.orderId + "," + p.customerName + "," +
+                     p.method + "," + p.amount + "," + p.isPaid + "," + p.paymentTime);
+            bw.newLine();
+        }
+        System.out.println("Đã ghi file thanh toán: " + filename);
+    } catch (IOException e) {
+        System.out.println("Lỗi ghi file thanh toán: " + e.getMessage());
+    }
+   }
+    // Đọc danh sách thanh toán
+public static ArrayList<Payment> readPaymentsFromFile(String filename) {
+    ArrayList<Payment> payments = new ArrayList<>();
+    try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+        String line;
+        while ((line = br.readLine()) != null) {
+            String[] data = line.split(",");
+            if (data.length >= 7) {
+                Payment p = new Payment(
+                    Integer.parseInt(data[1]), // orderId
+                    data[2],                   // customerName
+                    data[3],                   // method
+                    Integer.parseInt(data[4])  // amount
+                );
+                payments.add(p);
+            }
+        }
+        System.out.println("Đã đọc " + payments.size() + " thanh toán từ file " + filename);
+    } catch (IOException e) {
+        System.out.println("Lỗi đọc file thanh toán: " + e.getMessage());
+    }
+    return payments;
+}
+}    
