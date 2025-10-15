@@ -34,9 +34,14 @@ public class Do_an {
         users.add(admin);
 
         // Tạo menu mẫu
-        menu.add(new FoodItem("F01", "Burger Bò", "Burger", "Ngon tuyệt", 45000));
-        menu.add(new FoodItem("F02", "Gà Rán", "Fried Chicken", "Giòn tan", 40000));
-
+        menu.add(new FoodItem("F01", "Burger Bò", "Burger", "Burger bò phô mai thơm ngon", 45000));
+        menu.add(new FoodItem("F02", "Burger Gà", "Burger", "Burger gà giòn đặc biệt", 40000));
+        menu.add(new FoodItem("F03", "Gà Rán Truyền Thống", "Gà", "Gà rán da giòn vị truyền thống", 35000));
+        menu.add(new FoodItem("F04", "Gà Cay", "Gà", "Gà rán da giòn vị truyền thống", 37000));
+        menu.add(new FoodItem("F05", "Khoai Tây Chiên", "Ăn kèm", "Khoai tây chiên vàng giòn", 20000));
+        menu.add(new FoodItem("F06", "Salad Rau Trộn", "Ăn kèm", "Salad tươi mát với sốt mè", 25000));
+        menu.add(new FoodItem("F07", "Coca Cola", "Nước", "Chai Coca Cola 330ml", 15000));
+        menu.add(new FoodItem("F08", "Trà Chanh", "Nước", "Ly trà chanh mát lạnh", 18000));
         int choice;
         do {
             System.out.println("\n===== HỆ THỐNG QUẢN LÝ CỬA HÀNG =====");
@@ -603,4 +608,5 @@ class FileManager {
         }
     }
 }
+
 
