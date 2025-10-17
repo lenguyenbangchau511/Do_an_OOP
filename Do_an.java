@@ -14,16 +14,18 @@ public class Do_an {
         FileManager.FoodFileManager foodFM = fileManager. new FoodFileManager();
         FileManager.OrderFileManager orderFM = fileManager. new OrderFileManager(menu);
 
-// Ghi dữ liệu
-        userFM.writeToFile(users, "users.txt");
-        foodFM.writeToFile(menu, "foods.txt");
-        orderFM.writeToFile(orders, "orders.txt");
+        // Đọc dữ liệu
+        users = userFM.readFromFile("users.txt");
+        menu = foodFM.readFromFile("foods.txt");
+        orders = orderFM.readFromFile("orders.txt");
 
-// Đọc dữ liệu
+        // Đọc dữ liệu
         ArrayList<User> usersFromFile = userFM.readFromFile("users.txt");
         ArrayList<FoodItem> foodsFromFile = foodFM.readFromFile("foods.txt");
         ArrayList<Order> ordersFromFile = orderFM.readFromFile("orders.txt");
-        
+
+
+        int choice;
         do {
             System.out.println("\n===== HỆ THỐNG QUẢN LÝ CỬA HÀNG =====");
             System.out.println("1. Đăng nhập Admin");
@@ -63,19 +65,23 @@ public class Do_an {
                     System.out.print("Họ tên: ");
                     String name = sc.nextLine();
                     System.out.print("SĐT: ");
-                    String phone = sc.nextLine();
+                    String phonenumber = sc.nextLine();
                     System.out.print("Địa chỉ: ");
                     String address = sc.nextLine();
                     System.out.print("Email: ");
                     String email = sc.nextLine();
 
-                    Customer c = new Customer(name, phone, address, email);
-                    c.id = id;
-                    c.username = username;
-                    c.password = password;
-                    c.role = "Customer";
-                    users.add(c);
-                    System.out.println("Đăng ký thành công!");
+                    // Tạo đối tượng khách hàng
+                    Customer newCustomer = new Customer(id, username, password, name, phonenumber, address, email, true);
+                    newCustomer.role = "Customer"; // thêm dòng này nếu constructor chưa có role
+
+                    // Thêm vào danh sách
+                    users.add(newCustomer);
+
+                    // Ghi lại vào file user.txt
+                    userFM.writeToFile(users, "users.txt");
+
+                    System.out.println("Đăng ký thành công! Dữ liệu đã được lưu vào file users.txt");
                 }
                 case 3 -> {
                     System.out.print("Tên đăng nhập: ");
@@ -191,14 +197,21 @@ abstract class User {
 class Customer extends User {
     String name, phonenumber, address, email;
 
-    public Customer() { this("", "", "", ""); }
+    public Customer() { this("", "", "", "","","","",true);
+    }
 
-    public Customer(String name, String phonenumber, String address, String email) {
+    public Customer(String id, String username, String password, String name, String phonenumber, String address, String email, boolean status) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.role = "Customer";
+        this.status = status;
         this.name = name;
         this.phonenumber = phonenumber;
         this.address = address;
         this.email = email;
     }
+
 
     @Override
     boolean login(String username, String password) {
@@ -290,6 +303,12 @@ class Admin extends User {
                     System.out.print("Mô tả: "); String desc = sc.nextLine();
                     System.out.print("Giá: "); int price = Integer.parseInt(sc.nextLine());
                     menu.add(new FoodItem(id, name, cat, desc, price));
+
+                    // Ghi lại vào file ngay sau khi thêm
+                    FileManager fileManager = new FileManager();
+                    FileManager.FoodFileManager foodFM = fileManager.new FoodFileManager();
+                    foodFM.writeToFile(new ArrayList<>(menu),"foods.txt");
+                    System.out.println(" Món mới đã được thêm thành công!");
                 }
                 case 3 -> {
                     System.out.print("Nhập ID món: ");
@@ -362,7 +381,7 @@ class FoodItem {
     }
 
     public void display() {
-        System.out.printf("%s | %-15s | %-10s | %dđ | %s\n", idfood, name, category, price, description);
+        System.out.printf("%s | %-20s | %-10s | %dđ | %s\n", idfood, name, category, price, description);
     }
 }
 
@@ -438,7 +457,15 @@ class FileManager {
         public void writeToFile(ArrayList<User> users, String filename) {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
                 for (User u : users) {
-                    bw.write(u.role + "," + u.id + "," + u.username + "," + u.password + "," + u.status);
+                    String role = (u instanceof  Admin ) ? "Admin" : "Customer";
+                    if (u instanceof Admin a) {
+                        bw.write("Admin," + a.id + "," + a.username + "," + a.password + "," + a.status);
+                    } else if (u instanceof Customer c) {
+                        bw.write("Customer," + c.id + "," + c.username + "," + c.password + "," + c.status + ","
+                                + c.name + "," + c.phonenumber + "," + c.address + "," + c.email);
+                    }
+                    bw.newLine();
+
                     bw.newLine();
                 }
                 System.out.println("✅ Ghi người dùng thành công!");
@@ -454,28 +481,30 @@ class FileManager {
                 String line;
                 while ((line = br.readLine()) != null) {
                     String[] data = line.split(",");
-                    if (data.length >= 5) {
-                        String role = data[0];
+                    if (data[0].equalsIgnoreCase("Admin")) {
                         String id = data[1];
                         String username = data[2];
                         String password = data[3];
                         boolean status = Boolean.parseBoolean(data[4]);
+                        Admin a = new Admin("Admin", "0000000000");
+                        a.id = id;
+                        a.username = username;
+                        a.password = password;
+                        a.role = "Admin";
+                        a.status = status;
+                        users.add(a);
 
-                        if (role.equalsIgnoreCase("Admin")) {
-                            Admin a = new Admin("Tên admin", "SĐT");
-                            a.id = id;
-                            a.username = username;
-                            a.password = password;
-                            a.role = role;
-                            a.status = status;
-                            users.add(a);
-                        } else if (role.equalsIgnoreCase("Customer")) {
-                            Customer c = new Customer("Tên KH", "SĐT", "Địa chỉ", "Email");
-                            c.id = id;
-                            c.username = username;
-                            c.password = password;
-                            c.role = role;
-                            c.status = status;
+                    } else if (data[0].equalsIgnoreCase("Customer")) {
+                        if (data.length >= 9) { // đủ thông tin
+                            String id = data[1];
+                            String username = data[2];
+                            String password = data[3];
+                            boolean status = Boolean.parseBoolean(data[4]);
+                            String name = data[5];
+                            String phone = data[6];
+                            String address = data[7];
+                            String email = data[8];
+                            Customer c = new Customer(id, username, password, name, phone, address, email, status);
                             users.add(c);
                         }
                     }
@@ -589,6 +618,4 @@ class FileManager {
         }
     }
 }
-
-
 
