@@ -1,0 +1,4 @@
+P001|ORD001|125000|2024-01-15|Chuyển khoản|Thành công|C01
+P002|ORD002|97000|2024-01-15|Tiền mặt|Thành công|C02
+P003|ORD003|82000|2024-01-16|Chuyển khoản|Đã hủy|C03
+P004|ORD004|45000|2024-01-17|Tiền mặt|Thành công|C01

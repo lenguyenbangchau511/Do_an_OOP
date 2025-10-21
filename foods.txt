@@ -1,0 +1,8 @@
+F01|Burger Bò|45000|Burger|Burger bò phô mai thơm ngon
+F02|Burger Gà|40000|Burger|Burger gà giòn đặc biệt
+F03|Gà Rán Truyền Thống|35000|Gà|Gà rán da giòn vị truyền thống
+F04|Gà Cay|37000|Gà|Gà rán giòn vị cay nồng
+F05|Khoai Tây Chiên|20000|Ăn kèm|Khoai tây chiên vàng giòn
+F06|Salad Rau Trộn|25000|Ăn kèm|Salad tươi mát với sốt mè
+F07|Coca Cola|15000|Nước|Chai Coca Cola 330ml
+F08|Trà Chanh|18000|Nước|Ly trà chanh mát lạnh
