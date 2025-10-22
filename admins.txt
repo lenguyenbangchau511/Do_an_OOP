@@ -1,2 +1,2 @@
-A01|admin1|123|Nguyễn An|0101234567|Active
-A02|admin2|123|Lý Bình|0201234567|Active
+A01|admin1|321|Nguyễn An|0101234567
+A02|admin2|321|Lý Bình|0201234567

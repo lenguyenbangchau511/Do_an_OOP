@@ -1,4 +1,4 @@
-C01|khach01|pass01|Nguyễn Văn A|0901234503|HCM, Q1|a@gmail.com|active
-C02|khach02|pass02|Nguyễn Văn B|0901234504|HCM, Q2|b@gmail.com|active
-C03|khach03|pass03|Nguyễn Văn C|0901234505|HCM, Q3|c@gmail.com|active
-C04|khach04|pass04|Nguyễn Văn D|0901234506|HCM, Q4|d@gmail.com|banned
+C01|khach01|123|Nguyễn Văn A|0901234503
+C02|khach02|123|Nguyễn Văn B|0901234504
+C03|khach03|123|Nguyễn Văn C|0901234505
+C04|khach04|123|Nguyễn Văn D|0901234506

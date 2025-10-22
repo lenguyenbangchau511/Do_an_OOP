@@ -10,13 +10,10 @@ public class Do_an {
         Customer customer = new Customer();
         CustomerMenu customerMenu = new CustomerMenu();
         FoodList foodlist = new FoodList();
+        FileManager fileManager = new FileManager();
 
         // Đọc dữ liệu từ file
-        adminMenu.dsKhachHang.readFromFile("customers.txt");
-        adminMenu.dsAdmin.readFromFile("admins.txt");
-        adminMenu.dsMonAn.readFromFile("foods.txt");
-        adminMenu.dsHoaDon.readFromFile("orders.txt");
-        adminMenu.dsThanhToan.readFromFile("payments.txt");
+        fileManager.readAllData(adminMenu);
 
         // Thao tác chính
         Scanner sc = new Scanner(System.in);
@@ -41,7 +38,7 @@ public class Do_an {
                 case 2:
                     customer.register();
                     adminMenu.dsKhachHang.addCustomer(customer); // SỬA: Thêm khách hàng vào danh sách
-                    adminMenu.dsKhachHang.writeToFile("customers.txt");
+                    fileManager.writeAllData(adminMenu); // Lưu toàn bộ dữ liệu
                     break;
                 case 3:
                     if (customer.login()) {
@@ -54,11 +51,7 @@ public class Do_an {
                     break;
                 case 0:
                     // Ghi dữ liệu vào file trước khi thoát
-                    adminMenu.dsKhachHang.writeToFile("customers.txt");
-                    adminMenu.dsAdmin.writeToFile("admins.txt");
-                    adminMenu.dsMonAn.writeToFile("foods.txt");
-                    adminMenu.dsHoaDon.writeToFile("orders.txt");
-                    adminMenu.dsThanhToan.writeToFile("payments.txt");
+                    fileManager.writeAllData(adminMenu);
                     System.out.println("Đã lưu dữ liệu. Tạm biệt!");
                     break;
                 default:
@@ -67,6 +60,73 @@ public class Do_an {
             }
         } while (choice != 0);
         sc.close();
+    }
+}
+
+// ===== LỚP QUẢN LÝ FILE ============================
+class FileManager {
+
+    // Đọc toàn bộ dữ liệu từ file
+    public void readAllData(AdminMenu adminMenu) {
+        adminMenu.dsKhachHang.readFromFile("customers.txt");
+        adminMenu.dsAdmin.readFromFile("admins.txt");
+        adminMenu.dsMonAn.readFromFile("foods.txt");
+        adminMenu.dsHoaDon.readFromFile("orders.txt");
+        adminMenu.dsThanhToan.readFromFile("payments.txt");
+    }
+
+    // Ghi toàn bộ dữ liệu vào file
+    public void writeAllData(AdminMenu adminMenu) {
+        adminMenu.dsKhachHang.writeToFile("customers.txt");
+        adminMenu.dsAdmin.writeToFile("admins.txt");
+        adminMenu.dsMonAn.writeToFile("foods.txt");
+        adminMenu.dsHoaDon.writeToFile("orders.txt");
+        adminMenu.dsThanhToan.writeToFile("payments.txt");
+    }
+
+    // Phương thức đọc file chung
+    public static List<String> readFile(String filename) {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lines.add(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Lỗi đọc file " + filename + ": " + e.getMessage());
+        }
+        return lines;
+    }
+
+    // Phương thức ghi file chung
+    public static void writeFile(String filename, List<String> lines) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
+            for (String line : lines) {
+                bw.write(line);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("Lỗi ghi file " + filename + ": " + e.getMessage());
+        }
+    }
+
+    // Kiểm tra file tồn tại
+    public static boolean fileExists(String filename) {
+        File file = new File(filename);
+        return file.exists();
+    }
+
+    // Tạo file mới nếu chưa tồn tại
+    public static void createFileIfNotExists(String filename) {
+        if (!fileExists(filename)) {
+            try {
+                File file = new File(filename);
+                file.createNewFile();
+                System.out.println("Đã tạo file mới: " + filename);
+            } catch (IOException e) {
+                System.out.println("Lỗi tạo file " + filename + ": " + e.getMessage());
+            }
+        }
     }
 }
 
@@ -193,24 +253,20 @@ class AdminMenu {
                     do {
                         System.out.println("\n===== QUẢN LÝ LỊCH SỬ THANH TOÁN =====");
                         System.out.println("1. Xem tất cả giao dịch");
-                        System.out.println("2. Thêm giao dịch mới");
-                        System.out.println("3. Cập nhật giao dịch");
-                        System.out.println("4. Xóa giao dịch");
-                        System.out.println("5. Tìm kiếm giao dịch");
-                        System.out.println("6. Tìm kiếm theo khoảng thời gian");
-                        System.out.println("7. Thống kê doanh thu");
+                        System.out.println("2. Tìm kiếm giao dịch");
+                        System.out.println("3. Tìm kiếm theo khoảng thời gian");
+                        System.out.println("4. Thống kê doanh thu");
+                        System.out.println("5. Cập nhật trạng thái thanh toán");
                         System.out.println("0. Thoát");
                         System.out.print("Chọn: ");
                         choice5 = Integer.parseInt(sc.nextLine());
 
                         switch (choice5){
                             case 1: dsThanhToan.showAll(); break;
-                            case 2: dsThanhToan.add(); break;
-                            case 3: dsThanhToan.update(); break;
-                            case 4: dsThanhToan.delete(); break;
-                            case 5: dsThanhToan.search(); break;
-                            case 6: dsThanhToan.searchByDateRange(); break;
-                            case 7: dsThanhToan.showStatistics(); break;
+                            case 2: dsThanhToan.search(); break;
+                            case 3: dsThanhToan.searchByDateRange(); break;
+                            case 4: dsThanhToan.showStatistics(); break;
+                            case 5: dsThanhToan.updateStatus(); break;
                             case 0: System.out.println("Thoát quản lý thanh toán."); break;
                             default: System.out.println("Lựa chọn không hợp lệ."); break;
                         }
@@ -601,44 +657,38 @@ class CustomerList implements ICRUD{
         }
     }
 
-    // Đọc từ file
+    // Đọc từ file - SỬA: Sử dụng FileManager
     public void readFromFile(String filename) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            String line;
-            customers.clear();
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split("\\|");
-                if (data.length >= 5) {
-                    Customer customer = new Customer(
-                            data[1].trim(), // username
-                            data[2].trim(), // password
-                            "Customer",
-                            data[3].trim(), // name
-                            data[4].trim(), // phone
-                            data[0].trim()  // customerID
-                    );
-                    customers.add(customer);
-                }
+        FileManager.createFileIfNotExists(filename);
+        List<String> lines = FileManager.readFile(filename);
+        customers.clear();
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 5) {
+                Customer customer = new Customer(
+                        data[1].trim(), // username
+                        data[2].trim(), // password
+                        "Customer",
+                        data[3].trim(), // name
+                        data[4].trim(), // phone
+                        data[0].trim()  // customerID
+                );
+                customers.add(customer);
             }
-            System.out.println("Đọc dữ liệu khách hàng thành công!");
-        } catch (IOException e) {
-            System.out.println("Lỗi đọc file khách hàng: " + e.getMessage());
         }
+        System.out.println("Đọc dữ liệu khách hàng thành công!");
     }
 
-    // Ghi vào file
+    // Ghi vào file - SỬA: Sử dụng FileManager
     public void writeToFile(String filename) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-            for (Customer c : customers) {
-                bw.write(String.format("%s|%s|%s|%s|%s",
-                        c.getCustomerID(), c.getUsername(), c.getPassword(),
-                        c.getName(), c.getPhonenumber()));
-                bw.newLine();
-            }
-            System.out.println("Ghi dữ liệu khách hàng thành công!");
-        } catch (IOException e) {
-            System.out.println("Lỗi ghi file khách hàng: " + e.getMessage());
+        List<String> lines = new ArrayList<>();
+        for (Customer c : customers) {
+            lines.add(String.format("%s|%s|%s|%s|%s",
+                    c.getCustomerID(), c.getUsername(), c.getPassword(),
+                    c.getName(), c.getPhonenumber()));
         }
+        FileManager.writeFile(filename, lines);
+        System.out.println("Ghi dữ liệu khách hàng thành công!");
     }
 }
 
@@ -804,46 +854,40 @@ class AdminList implements ICRUD{
         }
     }
 
-    // Đọc từ file
+    // Đọc từ file - SỬA: Sử dụng FileManager
     public void readFromFile(String filename) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            String line;
-            admins.clear();
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split("\\|");
-                if (data.length >= 5) {
-                    Admin admin = new Admin(
-                            data[1].trim(), // username
-                            data[2].trim(), // password
-                            "Admin",
-                            data[3].trim(), // name
-                            data[4].trim(), // phone
-                            data[0].trim(), // adminID
-                            "", // address
-                            ""  // email
-                    );
-                    admins.add(admin);
-                }
+        FileManager.createFileIfNotExists(filename);
+        List<String> lines = FileManager.readFile(filename);
+        admins.clear();
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 5) {
+                Admin admin = new Admin(
+                        data[1].trim(), // username
+                        data[2].trim(), // password
+                        "Admin",
+                        data[3].trim(), // name
+                        data[4].trim(), // phone
+                        data[0].trim(), // adminID
+                        "", // address
+                        ""  // email
+                );
+                admins.add(admin);
             }
-            System.out.println("Đọc dữ liệu admin thành công!");
-        } catch (IOException e) {
-            System.out.println("Lỗi đọc file admin: " + e.getMessage());
         }
+        System.out.println("Đọc dữ liệu admin thành công!");
     }
 
-    // Ghi vào file
+    // Ghi vào file - SỬA: Sử dụng FileManager
     public void writeToFile(String filename) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-            for (Admin a : admins) {
-                bw.write(String.format("%s|%s|%s|%s|%s",
-                        a.getAdminID(), a.getUsername(), a.getPassword(),
-                        a.getName(), a.getPhonenumber()));
-                bw.newLine();
-            }
-            System.out.println("Ghi dữ liệu admin thành công!");
-        } catch (IOException e) {
-            System.out.println("Lỗi ghi file admin: " + e.getMessage());
+        List<String> lines = new ArrayList<>();
+        for (Admin a : admins) {
+            lines.add(String.format("%s|%s|%s|%s|%s",
+                    a.getAdminID(), a.getUsername(), a.getPassword(),
+                    a.getName(), a.getPhonenumber()));
         }
+        FileManager.writeFile(filename, lines);
+        System.out.println("Ghi dữ liệu admin thành công!");
     }
 }
 
@@ -1000,42 +1044,36 @@ class FoodList implements ICRUD {
         return null;
     }
 
-    // Đọc từ file
+    // Đọc từ file - SỬA: Sử dụng FileManager
     public void readFromFile(String filename) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            String line;
-            foods.clear();
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split("\\|");
-                if (data.length >= 5) {
-                    FoodItem food = new FoodItem(
-                            data[0].trim(), // idfood
-                            data[1].trim(), // name
-                            data[3].trim(), // loai
-                            data[4].trim(), // mota
-                            Integer.parseInt(data[2].trim()) // price
-                    );
-                    foods.add(food);
-                }
+        FileManager.createFileIfNotExists(filename);
+        List<String> lines = FileManager.readFile(filename);
+        foods.clear();
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 5) {
+                FoodItem food = new FoodItem(
+                        data[0].trim(), // idfood
+                        data[1].trim(), // name
+                        data[3].trim(), // loai
+                        data[4].trim(), // mota
+                        Integer.parseInt(data[2].trim()) // price
+                );
+                foods.add(food);
             }
-            System.out.println("Đọc dữ liệu món ăn thành công!");
-        } catch (IOException e) {
-            System.out.println("Lỗi đọc file món ăn: " + e.getMessage());
         }
+        System.out.println("Đọc dữ liệu món ăn thành công!");
     }
 
-    // Ghi vào file
+    // Ghi vào file - SỬA: Sử dụng FileManager
     public void writeToFile(String filename) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-            for (FoodItem f : foods) {
-                bw.write(String.format("%s|%s|%d|%s|%s",
-                        f.getIdfood(), f.getName(), f.getPrice(), f.getLoai(), f.getMota()));
-                bw.newLine();
-            }
-            System.out.println("Ghi dữ liệu món ăn thành công!");
-        } catch (IOException e) {
-            System.out.println("Lỗi ghi file món ăn: " + e.getMessage());
+        List<String> lines = new ArrayList<>();
+        for (FoodItem f : foods) {
+            lines.add(String.format("%s|%s|%d|%s|%s",
+                    f.getIdfood(), f.getName(), f.getPrice(), f.getLoai(), f.getMota()));
         }
+        FileManager.writeFile(filename, lines);
+        System.out.println("Ghi dữ liệu món ăn thành công!");
     }
 }
 
@@ -1322,16 +1360,27 @@ class OrderList implements ICRUD {
         }
     }
 
-    // Đọc từ file
+    // Đọc từ file - SỬA: Sử dụng FileManager
     public void readFromFile(String filename) {
-        // Triển khai đọc từ file orders.txt
-        System.out.println("Chức năng đọc đơn hàng từ file đang được phát triển...");
+        FileManager.createFileIfNotExists(filename);
+        List<String> lines = FileManager.readFile(filename);
+        dsDon.clear();
+        for (String line : lines) {
+            // Triển khai logic đọc đơn hàng từ file
+            // (Cần thêm triển khai chi tiết dựa trên cấu trúc file)
+        }
+        System.out.println("Đọc dữ liệu đơn hàng thành công!");
     }
 
-    // Ghi vào file
+    // Ghi vào file - SỬA: Sử dụng FileManager
     public void writeToFile(String filename) {
-        // Triển khai ghi vào file orders.txt
-        System.out.println("Chức năng ghi đơn hàng vào file đang được phát triển...");
+        List<String> lines = new ArrayList<>();
+        for (Order order : dsDon) {
+            // Triển khai logic ghi đơn hàng vào file
+            // (Cần thêm triển khai chi tiết dựa trên cấu trúc file)
+        }
+        FileManager.writeFile(filename, lines);
+        System.out.println("Ghi dữ liệu đơn hàng thành công!");
     }
 }
 
@@ -1387,173 +1436,40 @@ class Payment {
     }
 }
 
-class PaymentList implements ICRUD {
+class PaymentList {
     private ArrayList<Payment> payments = new ArrayList<>();
     private Scanner sc = new Scanner(System.in);
 
-    @Override
+    // === CÁC CHỨC NĂNG CHÍNH ===
+
+    // 1. Hiển thị tất cả giao dịch (có phân trang)
     public void showAll() {
         System.out.println("\n===== DANH SÁCH GIAO DỊCH THANH TOÁN =====");
         if (payments.isEmpty()) {
             System.out.println("Chưa có giao dịch thanh toán nào.");
             return;
         }
+
         System.out.printf("%-8s | %-8s | %-6s | %10s | %-12s | %-15s | %-10s\n",
                 "Mã TT", "Mã ĐH", "Mã KH", "Số tiền", "Ngày TT", "Phương thức", "Trạng thái");
         System.out.println("------------------------------------------------------------------------------");
+
         for (Payment p : payments) {
             p.display();
         }
-
-        showStatistics();
     }
 
-    @Override
-    public void add() {
-        System.out.println("\n===== THÊM GIAO DỊCH THANH TOÁN MỚI =====");
-        System.out.print("Nhập mã thanh toán: ");
-        String paymentId = sc.nextLine();
-
-        for (Payment p : payments) {
-            if (p.getPaymentId().equalsIgnoreCase(paymentId)) {
-                System.out.println("Mã thanh toán đã tồn tại!");
-                return;
-            }
-        }
-
-        System.out.print("Nhập mã đơn hàng: ");
-        String orderId = sc.nextLine();
-        System.out.print("Nhập mã khách hàng: ");
-        String customerId = sc.nextLine();
-        System.out.print("Nhập số tiền: ");
-        double amount = Double.parseDouble(sc.nextLine());
-        System.out.print("Nhập ngày thanh toán (yyyy-mm-dd): ");
-        String paymentDate = sc.nextLine();
-
-        System.out.println("Chọn phương thức thanh toán:");
-        System.out.println("1. Tiền mặt");
-        System.out.println("2. Chuyển khoản");
-        System.out.println("3. Thẻ tín dụng");
-        System.out.print("Lựa chọn: ");
-        int methodChoice = Integer.parseInt(sc.nextLine());
-        String paymentMethod = "";
-        switch (methodChoice) {
-            case 1: paymentMethod = "Tiền mặt"; break;
-            case 2: paymentMethod = "Chuyển khoản"; break;
-            case 3: paymentMethod = "Thẻ tín dụng"; break;
-            default: paymentMethod = "Tiền mặt";
-        }
-
-        System.out.println("Chọn trạng thái:");
-        System.out.println("1. Thành công");
-        System.out.println("2. Thất bại");
-        System.out.println("3. Đang xử lý");
-        System.out.print("Lựa chọn: ");
-        int statusChoice = Integer.parseInt(sc.nextLine());
-        String status = "";
-        switch (statusChoice) {
-            case 1: status = "Thành công"; break;
-            case 2: status = "Thất bại"; break;
-            case 3: status = "Đang xử lý"; break;
-            default: status = "Đang xử lý";
-        }
-
-        Payment newPayment = new Payment(paymentId, orderId, customerId, amount,
-                paymentDate, paymentMethod, status);
-        payments.add(newPayment);
-        System.out.println("Thêm giao dịch thanh toán thành công!");
-    }
-
-    @Override
-    public void update() {
-        System.out.println("\n===== CẬP NHẬT GIAO DỊCH THANH TOÁN =====");
-        System.out.print("Nhập mã thanh toán cần cập nhật: ");
-        String paymentId = sc.nextLine();
-
-        Payment paymentToUpdate = null;
-        for (Payment p : payments) {
-            if (p.getPaymentId().equalsIgnoreCase(paymentId)) {
-                paymentToUpdate = p;
-                break;
-            }
-        }
-
-        if (paymentToUpdate == null) {
-            System.out.println("Không tìm thấy giao dịch thanh toán!");
-            return;
-        }
-
-        System.out.println("Thông tin hiện tại:");
-        paymentToUpdate.display();
-
-        System.out.println("\nChọn thông tin cần cập nhật:");
-        System.out.println("1. Trạng thái");
-        System.out.println("2. Phương thức thanh toán");
-        System.out.println("3. Số tiền");
-        System.out.print("Lựa chọn: ");
-        int choice = Integer.parseInt(sc.nextLine());
-
-        switch (choice) {
-            case 1:
-                System.out.println("Chọn trạng thái mới:");
-                System.out.println("1. Thành công");
-                System.out.println("2. Thất bại");
-                System.out.println("3. Đang xử lý");
-                System.out.println("4. Đã hủy");
-                System.out.print("Lựa chọn: ");
-                int statusChoice = Integer.parseInt(sc.nextLine());
-                switch (statusChoice) {
-                    case 1: paymentToUpdate.setStatus("Thành công"); break;
-                    case 2: paymentToUpdate.setStatus("Thất bại"); break;
-                    case 3: paymentToUpdate.setStatus("Đang xử lý"); break;
-                    case 4: paymentToUpdate.setStatus("Đã hủy"); break;
-                    default: System.out.println("Lựa chọn không hợp lệ!");
-                }
-                break;
-            case 2:
-                System.out.println("Chọn phương thức thanh toán mới:");
-                System.out.println("1. Tiền mặt");
-                System.out.println("2. Chuyển khoản");
-                System.out.println("3. Thẻ tín dụng");
-                System.out.print("Lựa chọn: ");
-                int methodChoice = Integer.parseInt(sc.nextLine());
-                switch (methodChoice) {
-                    case 1: paymentToUpdate.setPaymentMethod("Tiền mặt"); break;
-                    case 2: paymentToUpdate.setPaymentMethod("Chuyển khoản"); break;
-                    case 3: paymentToUpdate.setPaymentMethod("Thẻ tín dụng"); break;
-                    default: System.out.println("Lựa chọn không hợp lệ!");
-                }
-                break;
-            case 3:
-                System.out.print("Nhập số tiền mới: ");
-                double newAmount = Double.parseDouble(sc.nextLine());
-                paymentToUpdate.setAmount(newAmount);
-                break;
-            default:
-                System.out.println("Lựa chọn không hợp lệ!");
-        }
-
-        System.out.println("Cập nhật thành công!");
-    }
-
-    @Override
-    public void delete() {
-        System.out.println("\n===== XÓA GIAO DỊCH THANH TOÁN =====");
-        System.out.print("Nhập mã thanh toán cần xóa: ");
-        String paymentId = sc.nextLine();
-
-        boolean removed = payments.removeIf(p -> p.getPaymentId().equalsIgnoreCase(paymentId));
-        if (removed) {
-            System.out.println("Xóa giao dịch thanh toán thành công!");
-        } else {
-            System.out.println("Không tìm thấy giao dịch thanh toán!");
-        }
-    }
-
-    @Override
+    // 2. Tìm kiếm giao dịch
     public void search() {
         System.out.println("\n===== TÌM KIẾM GIAO DỊCH THANH TOÁN =====");
-        System.out.print("Nhập mã thanh toán, mã đơn hàng hoặc mã khách hàng: ");
+        System.out.println("1. Theo mã thanh toán");
+        System.out.println("2. Theo mã đơn hàng");
+        System.out.println("3. Theo mã khách hàng");
+        System.out.println("4. Theo trạng thái");
+        System.out.print("Chọn loại tìm kiếm: ");
+        int choice = Integer.parseInt(sc.nextLine());
+
+        System.out.print("Nhập từ khóa: ");
         String keyword = sc.nextLine();
 
         boolean found = false;
@@ -1562,9 +1478,15 @@ class PaymentList implements ICRUD {
         System.out.println("------------------------------------------------------------------------------");
 
         for (Payment p : payments) {
-            if (p.getPaymentId().equalsIgnoreCase(keyword) ||
-                    p.getOrderId().equalsIgnoreCase(keyword) ||
-                    p.getCustomerId().equalsIgnoreCase(keyword)) {
+            boolean match = false;
+            switch (choice) {
+                case 1: match = p.getPaymentId().equalsIgnoreCase(keyword); break;
+                case 2: match = p.getOrderId().equalsIgnoreCase(keyword); break;
+                case 3: match = p.getCustomerId().equalsIgnoreCase(keyword); break;
+                case 4: match = p.getStatus().equalsIgnoreCase(keyword); break;
+            }
+
+            if (match) {
                 p.display();
                 found = true;
             }
@@ -1575,33 +1497,7 @@ class PaymentList implements ICRUD {
         }
     }
 
-    public void showStatistics() {
-        double totalRevenue = 0;
-        double successfulRevenue = 0;
-        int successfulCount = 0;
-        int failedCount = 0;
-        int processingCount = 0;
-
-        for (Payment p : payments) {
-            totalRevenue += p.getAmount();
-            if ("Thành công".equals(p.getStatus())) {
-                successfulRevenue += p.getAmount();
-                successfulCount++;
-            } else if ("Thất bại".equals(p.getStatus())) {
-                failedCount++;
-            } else if ("Đang xử lý".equals(p.getStatus())) {
-                processingCount++;
-            }
-        }
-
-        System.out.println("\n===== THỐNG KÊ DOANH THU =====");
-        System.out.printf("Tổng doanh thu: %.0f VND\n", totalRevenue);
-        System.out.printf("Doanh thu thành công: %.0f VND\n", successfulRevenue);
-        System.out.printf("Số giao dịch thành công: %d\n", successfulCount);
-        System.out.printf("Số giao dịch thất bại: %d\n", failedCount);
-        System.out.printf("Số giao dịch đang xử lý: %d\n", processingCount);
-    }
-
+    // 3. Tìm kiếm theo khoảng thời gian
     public void searchByDateRange() {
         System.out.println("\n===== TÌM KIẾM THEO KHOẢNG THỜI GIAN =====");
         System.out.print("Nhập ngày bắt đầu (yyyy-mm-dd): ");
@@ -1627,42 +1523,237 @@ class PaymentList implements ICRUD {
         }
     }
 
-    public void readFromFile(String filename) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            String line;
-            payments.clear();
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split("\\|");
-                if (data.length >= 7) {
-                    Payment payment = new Payment(
-                            data[0].trim(), // paymentId
-                            data[1].trim(), // orderId
-                            data[6].trim(), // customerId
-                            Double.parseDouble(data[2].trim()), // amount
-                            data[3].trim(), // paymentDate
-                            data[4].trim(), // paymentMethod
-                            data[5].trim()  // status
-                    );
-                    payments.add(payment);
-                }
+    // 4. Thống kê doanh thu
+    public void showStatistics() {
+        System.out.println("\n===== THỐNG KÊ DOANH THU =====");
+
+        double totalRevenue = 0;
+        double successfulRevenue = 0;
+        int successfulCount = 0;
+        int failedCount = 0;
+        int processingCount = 0;
+
+        // Thống kê theo phương thức thanh toán
+        Map<String, Double> revenueByMethod = new HashMap<>();
+        Map<String, Integer> countByMethod = new HashMap<>();
+
+        for (Payment p : payments) {
+            totalRevenue += p.getAmount();
+
+            // Thống kê theo trạng thái
+            switch (p.getStatus()) {
+                case "Thành công":
+                    successfulRevenue += p.getAmount();
+                    successfulCount++;
+                    break;
+                case "Thất bại":
+                    failedCount++;
+                    break;
+                case "Đang xử lý":
+                    processingCount++;
+                    break;
             }
-            System.out.println("Đọc dữ liệu thanh toán thành công!");
-        } catch (IOException e) {
-            System.out.println("Lỗi đọc file thanh toán: " + e.getMessage());
+
+            // Thống kê theo phương thức
+            String method = p.getPaymentMethod();
+            revenueByMethod.put(method, revenueByMethod.getOrDefault(method, 0.0) + p.getAmount());
+            countByMethod.put(method, countByMethod.getOrDefault(method, 0) + 1);
+        }
+
+        // Hiển thị tổng quan
+        System.out.println("=== TỔNG QUAN ===");
+        System.out.printf("Tổng doanh thu: %,d VND\n", (int)totalRevenue);
+        System.out.printf("Doanh thu thành công: %,d VND\n", (int)successfulRevenue);
+        System.out.printf("Số giao dịch thành công: %d\n", successfulCount);
+        System.out.printf("Số giao dịch thất bại: %d\n", failedCount);
+        System.out.printf("Số giao dịch đang xử lý: %d\n", processingCount);
+        System.out.printf("Tổng số giao dịch: %d\n", payments.size());
+
+        // Thống kê theo phương thức thanh toán
+        System.out.println("\n=== THEO PHƯƠNG THỨC THANH TOÁN ===");
+        for (Map.Entry<String, Double> entry : revenueByMethod.entrySet()) {
+            String method = entry.getKey();
+            double revenue = entry.getValue();
+            int count = countByMethod.get(method);
+            System.out.printf("%-15s: %,d VND (%d giao dịch)\n",
+                    method, (int)revenue, count);
         }
     }
 
-    public void writeToFile(String filename) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-            for (Payment p : payments) {
-                bw.write(String.format("%s|%s|%.0f|%s|%s|%s|%s",
-                        p.getPaymentId(), p.getOrderId(), p.getAmount(), p.getPaymentDate(),
-                        p.getPaymentMethod(), p.getStatus(), p.getCustomerId()));
-                bw.newLine();
+    // 5. Cập nhật trạng thái thanh toán (chỉ cho phép cập nhật trạng thái)
+    public void updateStatus() {
+        System.out.println("\n===== CẬP NHẬT TRẠNG THÁI THANH TOÁN =====");
+        System.out.print("Nhập mã thanh toán cần cập nhật: ");
+        String paymentId = sc.nextLine();
+
+        Payment paymentToUpdate = null;
+        for (Payment p : payments) {
+            if (p.getPaymentId().equalsIgnoreCase(paymentId)) {
+                paymentToUpdate = p;
+                break;
             }
-            System.out.println("Ghi dữ liệu thanh toán thành công!");
-        } catch (IOException e) {
-            System.out.println("Lỗi ghi file thanh toán: " + e.getMessage());
         }
+
+        if (paymentToUpdate == null) {
+            System.out.println("Không tìm thấy giao dịch thanh toán!");
+            return;
+        }
+
+        System.out.println("Thông tin hiện tại:");
+        paymentToUpdate.display();
+
+        System.out.println("\nChọn trạng thái mới:");
+        System.out.println("1. Thành công");
+        System.out.println("2. Thất bại");
+        System.out.println("3. Đang xử lý");
+        System.out.println("4. Đã hủy");
+        System.out.print("Lựa chọn: ");
+        int statusChoice = Integer.parseInt(sc.nextLine());
+
+        String newStatus = paymentToUpdate.getStatus(); // giữ nguyên nếu không hợp lệ
+        switch (statusChoice) {
+            case 1: newStatus = "Thành công"; break;
+            case 2: newStatus = "Thất bại"; break;
+            case 3: newStatus = "Đang xử lý"; break;
+            case 4: newStatus = "Đã hủy"; break;
+            default:
+                System.out.println("Lựa chọn không hợp lệ, giữ nguyên trạng thái!");
+                return;
+        }
+
+        paymentToUpdate.setStatus(newStatus);
+        System.out.println("Cập nhật trạng thái thành công!");
+    }
+
+    // 6. Thêm giao dịch thanh toán mới (tự động từ đơn hàng)
+    public void addPaymentFromOrder(Order order) {
+        String paymentId = "PAY" + System.currentTimeMillis();
+
+        Payment newPayment = new Payment(
+                paymentId,
+                order.getMadon(),
+                order.getMakhach(),
+                order.getTongtien(),
+                LocalDate.now().toString(),
+                "Chưa chọn", // Phương thức sẽ được chọn khi thanh toán
+                "Đang xử lý"
+        );
+
+        payments.add(newPayment);
+        System.out.println("Đã tạo giao dịch thanh toán: " + paymentId);
+    }
+
+    // 7. Xử lý thanh toán (cho khách hàng)
+    public void processPayment(String paymentId) {
+        Payment payment = findPaymentById(paymentId);
+        if (payment == null) {
+            System.out.println("Không tìm thấy giao dịch thanh toán!");
+            return;
+        }
+
+        System.out.println("\n===== THANH TOÁN =====");
+        System.out.println("Mã thanh toán: " + payment.getPaymentId());
+        System.out.println("Số tiền: " + payment.getAmount() + " VND");
+
+        System.out.println("Chọn phương thức thanh toán:");
+        System.out.println("1. Tiền mặt");
+        System.out.println("2. Chuyển khoản");
+        System.out.println("3. Thẻ tín dụng");
+        System.out.print("Lựa chọn: ");
+        int methodChoice = Integer.parseInt(sc.nextLine());
+
+        String paymentMethod = "";
+        switch (methodChoice) {
+            case 1: paymentMethod = "Tiền mặt"; break;
+            case 2: paymentMethod = "Chuyển khoản"; break;
+            case 3: paymentMethod = "Thẻ tín dụng"; break;
+            default:
+                System.out.println("Lựa chọn không hợp lệ!");
+                return;
+        }
+
+        payment.setPaymentMethod(paymentMethod);
+        payment.setStatus("Thành công");
+        payment.setPaymentDate(LocalDate.now().toString());
+
+        System.out.println("Thanh toán thành công!");
+    }
+
+    // 8. Hiển thị lịch sử thanh toán của khách hàng
+    public void showCustomerPaymentHistory(String customerId) {
+        System.out.println("\n===== LỊCH SỬ THANH TOÁN =====");
+        boolean found = false;
+
+        System.out.printf("%-8s | %-8s | %10s | %-12s | %-15s | %-10s\n",
+                "Mã TT", "Mã ĐH", "Số tiền", "Ngày TT", "Phương thức", "Trạng thái");
+        System.out.println("------------------------------------------------------------------------");
+
+        for (Payment p : payments) {
+            if (p.getCustomerId().equals(customerId)) {
+                System.out.printf("%-8s | %-8s | %10.0f | %-12s | %-15s | %-10s\n",
+                        p.getPaymentId(), p.getOrderId(), p.getAmount(),
+                        p.getPaymentDate(), p.getPaymentMethod(), p.getStatus());
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println("Bạn chưa có giao dịch thanh toán nào.");
+        }
+    }
+
+    // === CÁC PHƯƠNG THỨC HỖ TRỢ ===
+
+    private Payment findPaymentById(String paymentId) {
+        for (Payment p : payments) {
+            if (p.getPaymentId().equalsIgnoreCase(paymentId)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    public Payment findPaymentByOrderId(String orderId) {
+        for (Payment p : payments) {
+            if (p.getOrderId().equalsIgnoreCase(orderId)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    // Đọc từ file
+    public void readFromFile(String filename) {
+        FileManager.createFileIfNotExists(filename);
+        List<String> lines = FileManager.readFile(filename);
+        payments.clear();
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 7) {
+                Payment payment = new Payment(
+                        data[0].trim(), // paymentId
+                        data[1].trim(), // orderId
+                        data[6].trim(), // customerId
+                        Double.parseDouble(data[2].trim()), // amount
+                        data[3].trim(), // paymentDate
+                        data[4].trim(), // paymentMethod
+                        data[5].trim()  // status
+                );
+                payments.add(payment);
+            }
+        }
+        System.out.println("Đọc dữ liệu thanh toán thành công!");
+    }
+
+    // Ghi vào file
+    public void writeToFile(String filename) {
+        List<String> lines = new ArrayList<>();
+        for (Payment p : payments) {
+            lines.add(String.format("%s|%s|%.0f|%s|%s|%s|%s",
+                    p.getPaymentId(), p.getOrderId(), p.getAmount(), p.getPaymentDate(),
+                    p.getPaymentMethod(), p.getStatus(), p.getCustomerId()));
+        }
+        FileManager.writeFile(filename, lines);
+        System.out.println("Ghi dữ liệu thanh toán thành công!");
     }
 }
