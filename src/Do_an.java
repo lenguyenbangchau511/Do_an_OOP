@@ -4,26 +4,22 @@ import java.time.LocalDate;
 
 public class Do_an {
     public static void main(String[] args) {
-        // Tạo đối tượng
-        Admin admin = new Admin();
-        AdminMenu adminMenu = new AdminMenu();
-        Customer customer = new Customer();
-        CustomerMenu customerMenu = new CustomerMenu();
-        FoodList foodlist = new FoodList();
+        // Tạo đối tượng quản lý chính
         FileManager fileManager = new FileManager();
+        AdminMenu adminMenu = new AdminMenu(fileManager);
+        CustomerMenu customerMenu = new CustomerMenu(adminMenu.getDsMonAn(), adminMenu);
 
         // Đọc dữ liệu từ file
-        fileManager.readAllData(adminMenu);
+        fileManager.readAllData(adminMenu); // Đọc rồi nạp dữ liệu vào đối tượng adminMenu
 
         // Thao tác chính
         Scanner sc = new Scanner(System.in);
         int choice;
         do {
             System.out.println("\n===== CHÀO MỪNG ĐẾN VỚI HỆ THỐNG =====");
-            System.out.println("1. Đăng nhập quản lý");
+            System.out.println("1. Đăng nhập");
             System.out.println("2. Đăng ký khách hàng");
-            System.out.println("3. Đăng nhập khách hàng");
-            System.out.println("4. Xem menu");
+            System.out.println("3. Xem menu");
             System.out.println("0. Thoát");
             System.out.print("\nNhập lựa chọn: ");
             choice = sc.nextInt();
@@ -31,28 +27,46 @@ public class Do_an {
 
             switch (choice){
                 case 1:
-                    if (admin.login()) {
-                        adminMenu.choice();
+                    System.out.print("Nhập username: ");
+                    String username = sc.nextLine();
+                    System.out.print("Nhập password: ");
+                    String password = sc.nextLine();
+
+                    User user = User.Login.login(username, password);
+                    if (user != null) {
+                        // Phân quyền dựa trên role
+                        switch (user.getRole()) {
+                            case "admin":
+                                System.out.println("Chào mừng Quản trị viên " + user.getName() + "!");
+                                adminMenu.setAdminHienTai((Admin) user);
+                                adminMenu.choice();
+                                break;
+                            case "customer":
+                                System.out.println("Chào mừng Khách hàng " + user.getName() + "!");
+                                customerMenu.setKhachHangHienTai((Customer) user);
+                                customerMenu.choice();
+                                break;
+                            default:
+                                System.out.println("Role không hợp lệ!");
+                        }
+                    } else {
+                        System.out.println("Sai thông tin đăng nhập!");
                     }
                     break;
                 case 2:
-                    customer.register();
-                    adminMenu.dsKhachHang.addCustomer(customer); // SỬA: Thêm khách hàng vào danh sách
-                    fileManager.writeAllData(adminMenu); // Lưu toàn bộ dữ liệu
+                    // Tạo customer mới và gọi register()
+                    Customer newCustomer = new Customer(adminMenu.getDsKhachHang());
+                    newCustomer.register();
+                    adminMenu.getDsKhachHang().addCustomer(newCustomer);
+                    fileManager.writeAllData(adminMenu);
                     break;
                 case 3:
-                    if (customer.login()) {
-                        customerMenu.setCurrentCustomer(customer);
-                        customerMenu.choice();
-                    }
-                    break;
-                case 4:
-                    foodlist.showAll();
+                    adminMenu.getDsMonAn().showAll();
                     break;
                 case 0:
                     // Ghi dữ liệu vào file trước khi thoát
                     fileManager.writeAllData(adminMenu);
-                    System.out.println("Đã lưu dữ liệu. Tạm biệt!");
+                    System.out.println("Đã lưu dữ liệu. Kết thúc!");
                     break;
                 default:
                     System.out.println("Lựa chọn không hợp lệ.");
@@ -63,25 +77,79 @@ public class Do_an {
     }
 }
 
-// ===== LỚP QUẢN LÝ FILE ============================
+
+// ===== LỚP QUẢN LÝ FILE =====
 class FileManager {
 
     // Đọc toàn bộ dữ liệu từ file
     public void readAllData(AdminMenu adminMenu) {
-        adminMenu.dsKhachHang.readFromFile("customers.txt");
-        adminMenu.dsAdmin.readFromFile("admins.txt");
-        adminMenu.dsMonAn.readFromFile("foods.txt");
-        adminMenu.dsHoaDon.readFromFile("orders.txt");
-        adminMenu.dsThanhToan.readFromFile("payments.txt");
+        readUser("users.txt", adminMenu);
+        adminMenu.getDsMonAn().readFromFile("foods.txt");
+        adminMenu.getDsHoaDon().readFromFile("orders.txt");
+        adminMenu.getDsThanhToan().readFromFile("payments.txt");
     }
 
     // Ghi toàn bộ dữ liệu vào file
     public void writeAllData(AdminMenu adminMenu) {
-        adminMenu.dsKhachHang.writeToFile("customers.txt");
-        adminMenu.dsAdmin.writeToFile("admins.txt");
-        adminMenu.dsMonAn.writeToFile("foods.txt");
-        adminMenu.dsHoaDon.writeToFile("orders.txt");
-        adminMenu.dsThanhToan.writeToFile("payments.txt");
+        writeUser("users.txt", adminMenu);
+        adminMenu.getDsMonAn().writeToFile("foods.txt");
+        adminMenu.getDsHoaDon().writeToFile("orders.txt");
+        adminMenu.getDsThanhToan().writeToFile("payments.txt");
+    }
+
+    // Đọc tất cả user từ 1 file
+    private void readUser(String filename, AdminMenu adminMenu) {
+        List<String> lines = FileManager.readFile(filename);
+        adminMenu.getDsKhachHang().getCustomers().clear();
+        adminMenu.getDsAdmin().getAdmins().clear();
+
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 6) {
+                String role = data[3];
+
+                if ("admin".equals(role) && data.length >= 8) {
+                    Admin admin = new Admin(
+                            data[0], data[1], data[2], data[3],
+                            data[4], data[5], data[6], data[7]
+                    );
+                    adminMenu.getDsAdmin().getAdmins().add(admin);
+                } else if ("customer".equals(role)) {
+                    Customer customer = new Customer(
+                            data[0], data[1], data[2], data[3],
+                            data[4], data[5]
+                    );
+                    adminMenu.getDsKhachHang().getCustomers().add(customer);
+                }
+            }
+        }
+        System.out.println("Đọc dữ liệu user thành công! " +
+                adminMenu.getDsKhachHang().getCustomers().size() + " khách hàng, " +
+                adminMenu.getDsAdmin().getAdmins().size() + " admin");
+    }
+
+    // Ghi tất cả user vào 1 file
+    private void writeUser(String filename, AdminMenu adminMenu) {
+        List<String> lines = new ArrayList<>();
+
+        // Ghi admin
+        for (Admin a : adminMenu.getDsAdmin().getAdmins()) {
+            lines.add(String.format("%s|%s|%s|%s|%s|%s|%s|%s",
+                    a.getId(), a.getUsername(), a.getPassword(), a.getRole(),
+                    a.getName(), a.getPhonenumber(), a.getAddress(), a.getEmail()));
+        }
+
+        // Ghi customer
+        for (Customer c : adminMenu.getDsKhachHang().getCustomers()) {
+            lines.add(String.format("%s|%s|%s|%s|%s|%s",
+                    c.getId(), c.getUsername(), c.getPassword(),
+                    c.getRole(), c.getName(), c.getPhonenumber()));
+        }
+
+        FileManager.writeFile(filename, lines);
+//        System.out.println("Ghi dữ liệu user thành công! " +
+//                adminMenu.getDsKhachHang().getCustomers().size() + " khách hàng, " +
+//                adminMenu.getDsAdmin().getAdmins().size() + " admin");
     }
 
     // Phương thức đọc file chung
@@ -116,30 +184,47 @@ class FileManager {
         return file.exists();
     }
 
-    // Tạo file mới nếu chưa tồn tại
-    public static void createFileIfNotExists(String filename) {
-        if (!fileExists(filename)) {
-            try {
-                File file = new File(filename);
-                file.createNewFile();
-                System.out.println("Đã tạo file mới: " + filename);
-            } catch (IOException e) {
-                System.out.println("Lỗi tạo file " + filename + ": " + e.getMessage());
-            }
-        }
-    }
 }
 
-// ===== GIAO DIỆN ĐIỀU KHIỂN =======================
-class AdminMenu {
-    CustomerList dsKhachHang = new CustomerList();
-    AdminList dsAdmin = new AdminList();
-    FoodList dsMonAn = new FoodList();
-    OrderList dsHoaDon = new OrderList();
-    PaymentList dsThanhToan = new PaymentList(); // THÊM: Quản lý thanh toán
-    Scanner sc = new Scanner(System.in);
 
-    int choice;
+// ===== GIAO DIỆN ĐIỀU KHIỂN =====
+class AdminMenu {
+    private Admin AdminHienTai;
+    private CustomerList dsKhachHang;
+    private AdminList dsAdmin;
+    private FoodList dsMonAn;
+    private OrderList dsHoaDon;
+    private PaymentList dsThanhToan;
+    private FileManager fileManager;
+    private Scanner sc; // private để ngăn chặn đóng Scanner từ bên ngoài: ví dụ adminMenu.sc.close();
+    private int choice;
+
+    public void setAdminHienTai(Admin admin) { this.AdminHienTai = admin; }
+
+    public AdminMenu(FileManager fileManager) {
+        this.dsKhachHang = new CustomerList();
+        this.dsAdmin = new AdminList();
+        this.dsMonAn = new FoodList();
+        this.dsHoaDon = new OrderList();
+        this.dsThanhToan = new PaymentList();
+        this.fileManager = fileManager;
+        this.sc = new Scanner(System.in);
+    }
+
+    // Thêm getters cho các class cần truy cập
+    public CustomerList getDsKhachHang() { return dsKhachHang; }
+    public AdminList getDsAdmin() { return dsAdmin; }
+    public FoodList getDsMonAn() { return dsMonAn; }
+    public OrderList getDsHoaDon() { return dsHoaDon; }
+    public PaymentList getDsThanhToan() { return dsThanhToan; }
+    public void setFileManager(FileManager fileManager) { this.fileManager = fileManager; }
+
+    // Phương thức
+    public void writeData() {
+        if (fileManager != null)
+            fileManager.writeAllData(this);
+    }
+
     public void choice(){
         do {
             System.out.println("\n===== MENU QUẢN LÝ =====");
@@ -148,7 +233,7 @@ class AdminMenu {
             System.out.println("3. Quản lý món ăn");
             System.out.println("4. Quản lý hóa đơn");
             System.out.println("5. Quản lý lịch sử thanh toán");
-            System.out.println("0. Thoát.");
+            System.out.println("0. Đăng xuất.");
             System.out.print("\nChọn: ");
             choice = Integer.parseInt(sc.nextLine());
             switch (choice){
@@ -167,9 +252,18 @@ class AdminMenu {
 
                         switch (choice1){
                             case 1: dsKhachHang.showAll(); break;
-                            case 2: dsKhachHang.add(); break;
-                            case 3: dsKhachHang.update(); break;
-                            case 4: dsKhachHang.delete(); break;
+                            case 2:
+                                dsKhachHang.add();
+                                writeData();
+                                break;
+                            case 3:
+                                dsKhachHang.update();
+                                writeData();
+                                break;
+                            case 4:
+                                dsKhachHang.delete();
+                                writeData();
+                                break;
                             case 5: dsKhachHang.search(); break;
                             case 0: System.out.println("Thoát quản lý khách hàng."); break;
                             default: System.out.println("Lựa chọn không hợp lệ."); break;
@@ -191,9 +285,19 @@ class AdminMenu {
 
                         switch (choice2){
                             case 1: dsAdmin.showAll(); break;
-                            case 2: dsAdmin.add(); break;
-                            case 3: dsAdmin.update(); break;
-                            case 4: dsAdmin.delete(); break;
+                            case 2:
+                                dsAdmin.add();
+                                writeData();
+                                break;
+                            case 3:
+                                dsAdmin.update();
+                                writeData();
+                                System.out.println("Đã ghi vào file");
+                                break;
+                            case 4:
+                                dsAdmin.delete();
+                                writeData();
+                                break;
                             case 5: dsAdmin.search(); break;
                             case 0: System.out.println("Thoát quản lý quản trị viên."); break;
                             default: System.out.println("Lựa chọn không hợp lệ."); break;
@@ -215,9 +319,18 @@ class AdminMenu {
 
                         switch (choice3){
                             case 1: dsMonAn.showAll(); break;
-                            case 2: dsMonAn.add(); break;
-                            case 3: dsMonAn.update(); break;
-                            case 4: dsMonAn.delete(); break;
+                            case 2:
+                                dsMonAn.add();
+                                writeData();
+                                break;
+                            case 3:
+                                dsMonAn.update();
+                                writeData();
+                                break;
+                            case 4:
+                                dsMonAn.delete();
+                                writeData();
+                                break;
                             case 5: dsMonAn.search(); break;
                             case 0: System.out.println("Thoát quản lý menu."); break;
                             default: System.out.println("Lựa chọn không hợp lệ."); break;
@@ -239,9 +352,18 @@ class AdminMenu {
 
                         switch (choice4){
                             case 1: dsHoaDon.showAll(); break;
-                            case 2: dsHoaDon.add(); break;
-                            case 3: dsHoaDon.update(); break;
-                            case 4: dsHoaDon.delete(); break;
+                            case 2:
+                                dsHoaDon.add();
+                                writeData();
+                                break;
+                            case 3:
+                                dsHoaDon.update();
+                                writeData();
+                                break;
+                            case 4:
+                                dsHoaDon.delete();
+                                writeData();
+                                break;
                             case 5: dsHoaDon.search(); break;
                             case 0: System.out.println("Thoát quản lý hóa đơn."); break;
                             default: System.out.println("Lựa chọn không hợp lệ."); break;
@@ -273,8 +395,8 @@ class AdminMenu {
                     } while (choice5 != 0);
                     break;
                 case 0:
-                    System.out.println("Thoát menu quản lý.");
-                    break;
+                    AdminHienTai.logout();
+                    return;
                 default:
                     System.out.println("Lựa chọn không hợp lệ.");
                     break;
@@ -284,17 +406,26 @@ class AdminMenu {
 }
 
 class CustomerMenu {
-    private Customer currentCustomer; // SỬA: Thêm thuộc tính để lưu khách hàng hiện tại
-    FoodList food = new FoodList();
-    Cart cart = new Cart();
-    OrderList orderList = new OrderList(); // SỬA: Dùng OrderList thay vì Order
-    private Scanner sc = new Scanner(System.in);
+    private Customer KhachHangHienTai;
+    private CustomerList customerList;
+    private FoodList food;
+    private Cart cart;
+    private OrderList orderList;
+    private AdminMenu adminMenu;
+    private Scanner sc;
     private int choice;
 
-    // SỬA: Thêm setter cho currentCustomer
-    public void setCurrentCustomer(Customer customer) {
-        this.currentCustomer = customer;
+    public CustomerMenu(FoodList foodlist, AdminMenu adminMenu) {
+        this.customerList = new CustomerList();
+        this.food = foodlist; // dùng chung foodlist của adminMenu trong main
+        this.cart = new Cart(foodlist);
+        this.orderList = adminMenu.getDsHoaDon(); // Dùng chung OrderList
+        this.adminMenu = adminMenu;
+        this.sc = new Scanner(System.in);
     }
+
+    // Thêm setter
+    public void setKhachHangHienTai(Customer customer) { this.KhachHangHienTai = customer; }
 
     public void choice(){
         do {
@@ -304,8 +435,8 @@ class CustomerMenu {
             System.out.println("3. Xem giỏ hàng");
             System.out.println("4. Xem đơn hàng của tôi");
             System.out.println("5. Thanh toán");
-            System.out.println("6. Đăng xuất");
-            System.out.println("0. Thoát.");
+            System.out.println("6. Sửa thông tin cá nhân");
+            System.out.println("0. Đăng xuất.");
             System.out.print("\nChọn: ");
             choice = sc.nextInt();
             sc.nextLine(); // clear buffer
@@ -321,28 +452,35 @@ class CustomerMenu {
                     cart.HienThi();
                     break;
                 case 4:
-                    // SỬA: Hiển thị đơn hàng của khách hàng hiện tại
-                    orderList.showCustomerOrders(currentCustomer.getCustomerID());
+                    orderList.showCustomerOrders(KhachHangHienTai.getId());
                     break;
                 case 5:
-                    // SỬA: Chức năng thanh toán
                     if (cart.isEmpty()) {
                         System.out.println("Giỏ hàng trống!");
                     } else {
-                        Order newOrder = cart.Xacnhandon(currentCustomer.getCustomerID());
+                        Order newOrder = cart.Xacnhandon(KhachHangHienTai.getId());
                         if (newOrder != null) {
-                            orderList.addOrder(newOrder);
-                            System.out.println("Đặt hàng thành công!");
-                            cart.clearCart(); // Xóa giỏ hàng sau khi đặt
+                            // Thêm đơn hàng vào danh sách của adminMenu
+                            adminMenu.getDsHoaDon().addOrder(newOrder);
+
+                            // Thêm thanh toán vào danh sách của adminMenu
+                            adminMenu.getDsThanhToan().addPaymentFromOrder(newOrder);
+
+                            // Lưu toàn bộ dữ liệu
+                            adminMenu.writeData();
+
+                            System.out.println("Đặt hàng thành công! Mã đơn: " + newOrder.getMadon());
+                            cart.clearCart();
                         }
                     }
                     break;
                 case 6:
-                    currentCustomer.logout();
-                    return; // Quay về menu chính
-                case 0:
-                    System.out.println("Thoát chương trình.");
+                    customerList.updateKHHT(KhachHangHienTai);
+                    adminMenu.writeData();
                     break;
+                case 0:
+                    KhachHangHienTai.logout();
+                    return;
                 default:
                     System.out.println("Lựa chọn không hợp lệ.");
                     break;
@@ -351,7 +489,8 @@ class CustomerMenu {
     }
 }
 
-// ===== INTERFACE VÀ LỚP TRỪU TƯỢNG =================
+
+// ===== INTERFACE VÀ LỚP TRỪU TƯỢNG =====
 interface ICRUD {
     void showAll();
     void add();
@@ -360,18 +499,16 @@ interface ICRUD {
     void search();
 }
 
-abstract class User{
-    private String username;
-    private String password;
-    private String role;
-    private String name;
-    private String phonenumber;
+abstract class User {
+    protected String id;
+    protected String username;
+    protected String password;
+    protected String role;
+    protected String name;
+    protected String phonenumber;
 
-    public User() {
-        this("", "", "", "", "");
-    }
-
-    public User(String username, String password, String role, String name, String phonenumber) {
+    public User(String id, String username, String password, String role, String name, String phonenumber) {
+        this.id = id;
         this.username = username;
         this.password = password;
         this.role = role;
@@ -379,79 +516,125 @@ abstract class User{
         this.phonenumber = phonenumber;
     }
 
-    public final boolean login(){
-        Scanner sc = new Scanner(System.in);
-        System.out.print("Nhập username: ");
-        String inputUsername = sc.nextLine();
-        System.out.print("Nhập password: ");
-        String inputPassword = sc.nextLine();
-        if (check(inputUsername, inputPassword)) {
-            System.out.println("Đăng nhập thành công với quyền: " + role);
-            afterLogin();
-            return true;
-        } else {
-            System.out.println("Sai thông tin đăng nhập.");
-            return false;
+    // GETTERS
+    public String getId() { return id; }
+    public String getUsername() { return username; }
+    public String getPassword() { return password; }
+    public String getRole() { return role; }
+    public String getName() { return name; }
+    public String getPhonenumber() { return phonenumber; }
+
+    // SETTERS
+    public void setId(String id) { this.id = id; }
+    public void setUsername(String username) { this.username = username; }
+    public void setPassword(String password) { this.password = password; }
+    public void setRole(String role) { this.role = role; }
+    public void setName(String name) { this.name = name; }
+    public void setPhonenumber(String phonenumber) { this.phonenumber = phonenumber; }
+
+    // Phương thức đăng nhập chung
+    class Login {
+        public static User login(String username, String password) {
+            List<String> lines = FileManager.readFile("users.txt");
+
+            for (String line : lines) {
+                String[] data = line.split("\\|");
+
+                // data[1] = username, data[2] = password
+                if (data[1].equals(username) && data[2].equals(password)) {
+                    String role = data[3];  // data[3] = role
+
+                    if ("admin".equals(role)) {
+                        // Tạo đối tượng Admin
+                        return new Admin(
+                                data[0],  // ID
+                                data[1],  // Username
+                                data[2],  // Password
+                                data[3],  // Role
+                                data[4],  // Name
+                                data[5],  // Phone
+                                data.length > 6 ? data[6] : "",       // Address (tạm để trống)
+                                data.length > 7 ? data[7] : ""        // Email (tạm để trống)
+                        );
+                    } else {
+                        // Tạo đối tượng Customer
+                        return new Customer(
+                                data[0],  // ID
+                                data[1],  // Username
+                                data[2],  // Password
+                                data[3],  // Role
+                                data[4],  // Name
+                                data[5]   // Phone
+                        );
+                    }
+                }
+            }
+            return null;
         }
     }
-    protected abstract boolean check(String username, String password);
-    protected abstract void afterLogin();
-    public abstract void logout();
 
-    public String getUsername(){return username;}
-    public String getPassword(){return password;}
-    public String getRole(){return role;}
-    public String getName(){return name;}
-    public String getPhonenumber(){return phonenumber;}
+    // Phương thức hiển thị thông tin theo role
+    public abstract void displayInfo();
 
-    public void setUsername(String username){this.username = username;}
-    public void setPassword(String password){this.password = password;}
-    public void setRole(String role){this.role = role;}
-    public void setName(String name){this.name = name;}
-    public void setPhonenumber(String phonenumber){this.phonenumber = phonenumber;}
+    // Phương thức phân quyền
+    public boolean PhanQuyen(String permission) {
+        switch (this.role) {
+            case "admin":
+                return true; // Admin có tất cả quyền
+            case "customer":
+                return "view_menu".equals(permission) || "place_order".equals(permission) || "view_own_orders".equals(permission);
+            default:
+                return false;
+        }
+    }
 }
 
-// ===== NHÓM NGƯỜI DÙNG =============================
+
+// ===== NHÓM NGƯỜI DÙNG =====
 class Customer extends User {
     private static int customerCount = 0;
-    private String customerID;
-    Scanner sc = new Scanner(System.in);
 
-    public Customer() {
-        super();
-        this.customerID = "C0" + (++customerCount);
-    }
-    public Customer(String username, String password, String role, String name, String phonenumber, String customerID) {
-        super(username, password, "Customer", name, phonenumber);
-        this.customerID = customerID == null ? Customer.TuDongTaoIDKhachHang() : customerID;
+    public Customer(CustomerList customerList) {
+        super(TaoIdTuDong(customerList), "", "", "customer", "", "");
     }
 
-    // GETTER, SETTER
-    public String getCustomerID() {return customerID;}
-    public void setCustomerID(String customerID) {this.customerID = customerID;}
-
-    // PHUONG THUC
-    public static String TuDongTaoIDKhachHang() {
-        return "C0" + (++customerCount);
+    public Customer(String id, String username, String password, String role, String name, String phonenumber) {
+        super(id, username, password, role, name, phonenumber);
     }
 
     @Override
-    protected boolean check(String username, String password) {
-        // SỬA: Cần kiểm tra trong danh sách khách hàng
-        return getUsername().equals(username) && getPassword().equals(password);
+    public void displayInfo() {
+        System.out.println("=== THÔNG TIN KHÁCH HÀNG ===");
+        System.out.println("ID: " + getId());
+        System.out.println("Tên: " + getName());
+        System.out.println("SĐT: " + getPhonenumber());
+        System.out.println("Username: " + getUsername());
+        System.out.println("Role: " + getRole());
     }
 
-    @Override
-    protected void afterLogin() {
-        System.out.println("Chào mừng khách hàng " + getName());
+    private static String TaoIdTuDong(CustomerList customerList) {
+        int maxId = 0;
+
+        // LUÔN đọc từ file để đảm bảo có dữ liệu mới nhất
+        List<String> lines = FileManager.readFile("users.txt");
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 1 && data[0].startsWith("C")) {
+                try {
+                    int idNum = Integer.parseInt(data[0].substring(1));
+                    if (idNum > maxId) maxId = idNum;
+                } catch (NumberFormatException e) {
+                    // Bỏ qua nếu ID không đúng định dạng
+                }
+            }
+        }
+
+        String newId = "C" + String.format("%03d", maxId + 1);
+        return newId;
     }
 
-    @Override
-    public void logout(){
-        System.out.println("Khách hàng " + this.getUsername() + " đã đăng xuất.");
-    }
-
-    public void register(){
+    public void register() {
+        Scanner sc = new Scanner(System.in);
         System.out.println("===== Đăng ký tài khoản khách hàng =====");
         System.out.print("Nhập tên đăng nhập: ");
         this.setUsername(sc.nextLine());
@@ -461,63 +644,63 @@ class Customer extends User {
         this.setName(sc.nextLine());
         System.out.print("Nhập số điện thoại: ");
         this.setPhonenumber(sc.nextLine());
+        this.setRole("customer");
 
-        System.out.println("Khách hàng " + this.getName() + " đã đăng ký thành công với ID = " + this.getCustomerID());
+        System.out.println("Khách hàng " + this.getName() + " đã đăng ký thành công với ID = " + this.getId());
+    }
+
+    public void logout(){
+        System.out.println("Khách hàng " + this.getName() + " đã đăng xuất.");
     }
 }
 
 class Admin extends User {
-    private String adminID;
     private String address;
     private String email;
 
     public Admin() {
-        super();
-        this.adminID = "";
-        this.address = "";
-        this.email = "";
+        super("", "", "", "admin", "", "");
     }
 
-    public Admin(String username, String password, String role, String name, String phonenumber, String adminID, String address, String email) {
-        super(username, password, "Admin", name, phonenumber);
-        this.adminID = adminID;
+    public Admin(String id, String username, String password, String role, String name, String phonenumber, String address, String email) {
+        super(id, username, password, role, name, phonenumber);
         this.address = address;
         this.email = email;
     }
 
-    public String getAdminID() {return adminID;}
-    public String getAddress() {return address;}
-    public String getEmail() {return email;}
-    public void setAdminID(String adminID) {this.adminID = adminID;}
-    public void setAddress(String address) {this.address = address;}
-    public void setEmail(String email) {this.email = email;}
-
     @Override
-    protected boolean check(String username, String password) {
-        // SỬA: Cần kiểm tra trong danh sách admin
-        return getUsername().equals(username) && getPassword().equals(password);
-    }
-    @Override
-    protected void afterLogin() {
-        System.out.println("Chào mừng quản trị viên " + getName());
+    public void displayInfo() {
+        System.out.println("=== THÔNG TIN QUẢN TRỊ VIÊN ===");
+        System.out.println("ID: " + getId());
+        System.out.println("Tên: " + getName());
+        System.out.println("SĐT: " + getPhonenumber());
+        System.out.println("Email: " + email);
+        System.out.println("Địa chỉ: " + address);
+        System.out.println("Username: " + getUsername());
+        System.out.println("Role: " + getRole());
     }
 
-    @Override
-    public void logout() {
-        System.out.println("Admin " + this.getUsername() + " đã đăng xuất.");
+    public void logout(){
+        System.out.println("Admin " + this.getName() + " đã đăng xuất.");
     }
+
+    // GETTERS cho address và email
+    public String getAddress() { return address; }
+    public String getEmail() { return email; }
+    public void setAddress(String address) { this.address = address; }
+    public void setEmail(String email) { this.email = email; }
 }
 
 class CustomerList implements ICRUD{
     private ArrayList<Customer> customers = new ArrayList<>();
-    Scanner sc = new Scanner(System.in);
+    private Scanner sc = new Scanner(System.in);
 
-    // SỬA: Thêm phương thức để thêm khách hàng từ đăng ký
+    public ArrayList<Customer> getCustomers() { return customers; }
+
+    // Thêm phương thức để thêm khách hàng từ đăng ký
     public void addCustomer(Customer customer) {
         customers.add(customer);
     }
-
-    public ArrayList<Customer> getCustomers() {return customers;}
 
     @Override
     public void showAll() {
@@ -530,35 +713,16 @@ class CustomerList implements ICRUD{
         System.out.println("--------------------------------------------------------");
         for (Customer c : customers) {
             System.out.printf("%-6s | %-15s | %-20s | %-12s\n",
-                    c.getCustomerID(), c.getUsername(), c.getName(), c.getPhonenumber());
+                    c.getId(), c.getUsername(), c.getName(), c.getPhonenumber());
         }
     }
 
     @Override
     public void add() {
-        System.out.println("\n===== THÊM KHÁCH HÀNG MỚI =====");
-        System.out.print("Nhập ID khách hàng: ");
-        String id = sc.nextLine();
-        // Kiểm tra trùng ID
-        for (Customer c : customers) {
-            if (c.getCustomerID().equalsIgnoreCase(id)) {
-                System.out.println("ID này đã tồn tại. Không thể thêm mới!");
-                return;
-            }
-        }
-
-        System.out.print("Nhập tên đăng nhập: ");
-        String username = sc.nextLine();
-        System.out.print("Nhập mật khẩu: ");
-        String password = sc.nextLine();
-        System.out.print("Nhập họ tên: ");
-        String name = sc.nextLine();
-        System.out.print("Nhập số điện thoại: ");
-        String phone = sc.nextLine();
-
-        Customer newCustomer = new Customer(username, password, "Customer", name, phone, id);
+        Customer newCustomer = new Customer(this);
+        newCustomer.register();
         customers.add(newCustomer);
-        System.out.println("Thêm khách hàng thành công!");
+        System.out.println("Đã thêm khách hàng mới thành công!");
     }
 
     @Override
@@ -567,7 +731,7 @@ class CustomerList implements ICRUD{
         String id = sc.nextLine();
         Customer c1 = null;
         for (Customer c : customers) {
-            if (c.getCustomerID().equalsIgnoreCase(id)){
+            if (c.getId().equalsIgnoreCase(id)){
                 c1 = c;
                 break;
             }
@@ -620,7 +784,7 @@ class CustomerList implements ICRUD{
 
         Customer c1 = null;
         for (Customer c : customers) {
-            if (c.getCustomerID().equalsIgnoreCase(id)) {
+            if (c.getId().equalsIgnoreCase(id)) {
                 c1 = c;
                 break;
             }
@@ -645,9 +809,9 @@ class CustomerList implements ICRUD{
         System.out.printf("%-6s | %-15s | %-20s | %-12s\n", "ID", "Username", "Tên", "SĐT");
         System.out.println("--------------------------------------------------------");
         for (Customer c : customers) {
-            if (c.getCustomerID().equalsIgnoreCase(keyword) || c.getName().toLowerCase().contains(keyword.toLowerCase())) {
+            if (c.getId().equalsIgnoreCase(keyword) || c.getName().toLowerCase().contains(keyword.toLowerCase())) {
                 System.out.printf("%-6s | %-15s | %-20s | %-12s\n",
-                        c.getCustomerID(), c.getUsername(), c.getName(), c.getPhonenumber());
+                        c.getId(), c.getUsername(), c.getName(), c.getPhonenumber());
                 found = true;
             }
         }
@@ -657,38 +821,42 @@ class CustomerList implements ICRUD{
         }
     }
 
-    // Đọc từ file - SỬA: Sử dụng FileManager
-    public void readFromFile(String filename) {
-        FileManager.createFileIfNotExists(filename);
-        List<String> lines = FileManager.readFile(filename);
-        customers.clear();
-        for (String line : lines) {
-            String[] data = line.split("\\|");
-            if (data.length >= 5) {
-                Customer customer = new Customer(
-                        data[1].trim(), // username
-                        data[2].trim(), // password
-                        "Customer",
-                        data[3].trim(), // name
-                        data[4].trim(), // phone
-                        data[0].trim()  // customerID
-                );
-                customers.add(customer);
-            }
-        }
-        System.out.println("Đọc dữ liệu khách hàng thành công!");
-    }
+    public void updateKHHT(Customer KhachHangHienTai) {
+        Scanner sc = new Scanner(System.in);
+        int choice;
+        do {
+            System.out.println("\n==== CẬP NHẬT THÔNG TIN CÁ NHÂN ====");
+            System.out.println("1. Đổi tên: " + KhachHangHienTai.getName());
+            System.out.println("2. Đổi số điện thoại: " + KhachHangHienTai.getPhonenumber());
+            System.out.println("3. Đổi mật khẩu");
+            System.out.println("0. Thoát");
+            System.out.print("\nChọn thông tin cần chỉnh sửa: ");
+            choice = Integer.parseInt(sc.nextLine());
 
-    // Ghi vào file - SỬA: Sử dụng FileManager
-    public void writeToFile(String filename) {
-        List<String> lines = new ArrayList<>();
-        for (Customer c : customers) {
-            lines.add(String.format("%s|%s|%s|%s|%s",
-                    c.getCustomerID(), c.getUsername(), c.getPassword(),
-                    c.getName(), c.getPhonenumber()));
-        }
-        FileManager.writeFile(filename, lines);
-        System.out.println("Ghi dữ liệu khách hàng thành công!");
+            switch (choice) {
+                case 1:
+                    System.out.print("Nhập tên mới: ");
+                    KhachHangHienTai.setName(sc.nextLine());
+                    System.out.println("Cập nhật tên thành công!");
+                    break;
+                case 2:
+                    System.out.print("Nhập số điện thoại mới: ");
+                    KhachHangHienTai.setPhonenumber(sc.nextLine());
+                    System.out.println("Cập nhật số điện thoại thành công!");
+                    break;
+                case 3:
+                    System.out.print("Nhập mật khẩu mới: ");
+                    KhachHangHienTai.setPassword(sc.nextLine());
+                    System.out.println("Cập nhật mật khẩu thành công!");
+                    break;
+                case 0:
+                    System.out.println("Thoát cập nhật.");
+                    break;
+                default:
+                    System.out.println("Lựa chọn không hợp lệ!");
+                    break;
+            }
+        } while (choice != 0);
     }
 }
 
@@ -709,7 +877,7 @@ class AdminList implements ICRUD{
         System.out.println("--------------------------------------------------------");
         for (Admin a : admins) {
             System.out.printf("%-6s | %-15s | %-20s | %-12s\n",
-                    a.getAdminID(), a.getUsername(), a.getName(), a.getPhonenumber());
+                    a.getId(), a.getUsername(), a.getName(), a.getPhonenumber());
         }
     }
 
@@ -720,7 +888,7 @@ class AdminList implements ICRUD{
         String id = sc.nextLine();
         // Kiểm tra trùng ID
         for (Admin a : admins) {
-            if (a.getAdminID().equalsIgnoreCase(id)) {
+            if (a.getId().equalsIgnoreCase(id)) {
                 System.out.println("ID này đã tồn tại. Không thể thêm mới!");
                 return;
             }
@@ -739,7 +907,7 @@ class AdminList implements ICRUD{
         System.out.print("Nhập email: ");
         String email = sc.nextLine();
 
-        Admin newAdmin = new Admin(username, password, "Admin", name, phone, id, address, email);
+        Admin newAdmin = new Admin(id, username, password, "admin", name, phone, address, email);
         admins.add(newAdmin);
         System.out.println("Thêm quản trị viên thành công!");
     }
@@ -750,7 +918,7 @@ class AdminList implements ICRUD{
         String id = sc.nextLine();
         Admin a1 = null;
         for (Admin a : admins) {
-            if (a.getAdminID().equalsIgnoreCase(id)){
+            if (a.getId().equalsIgnoreCase(id)){
                 a1 = a;
                 break;
             }
@@ -815,7 +983,7 @@ class AdminList implements ICRUD{
 
         Admin a1 = null;
         for (Admin a : admins) {
-            if (a.getAdminID().equalsIgnoreCase(id)) {
+            if (a.getId().equalsIgnoreCase(id)) {
                 a1 = a;
                 break;
             }
@@ -841,9 +1009,9 @@ class AdminList implements ICRUD{
                 "ID", "Username", "Tên", "SĐT", "Email", "Địa chỉ");
         System.out.println("----------------------------------------------------------------------------------------");
         for (Admin a : admins) {
-            if (a.getAdminID().equalsIgnoreCase(keyword) || a.getName().toLowerCase().contains(keyword.toLowerCase())) {
+            if (a.getId().equalsIgnoreCase(keyword) || a.getName().toLowerCase().contains(keyword.toLowerCase())) {
                 System.out.printf("%-6s | %-15s | %-20s | %-12s | %-20s | %-15s\n",
-                        a.getAdminID(), a.getUsername(), a.getName(),
+                        a.getId(), a.getUsername(), a.getName(),
                         a.getPhonenumber(), a.getEmail(), a.getAddress());
                 found = true;
             }
@@ -853,45 +1021,10 @@ class AdminList implements ICRUD{
             System.out.println("Không tìm thấy quản trị viên nào phù hợp!");
         }
     }
-
-    // Đọc từ file - SỬA: Sử dụng FileManager
-    public void readFromFile(String filename) {
-        FileManager.createFileIfNotExists(filename);
-        List<String> lines = FileManager.readFile(filename);
-        admins.clear();
-        for (String line : lines) {
-            String[] data = line.split("\\|");
-            if (data.length >= 5) {
-                Admin admin = new Admin(
-                        data[1].trim(), // username
-                        data[2].trim(), // password
-                        "Admin",
-                        data[3].trim(), // name
-                        data[4].trim(), // phone
-                        data[0].trim(), // adminID
-                        "", // address
-                        ""  // email
-                );
-                admins.add(admin);
-            }
-        }
-        System.out.println("Đọc dữ liệu admin thành công!");
-    }
-
-    // Ghi vào file - SỬA: Sử dụng FileManager
-    public void writeToFile(String filename) {
-        List<String> lines = new ArrayList<>();
-        for (Admin a : admins) {
-            lines.add(String.format("%s|%s|%s|%s|%s",
-                    a.getAdminID(), a.getUsername(), a.getPassword(),
-                    a.getName(), a.getPhonenumber()));
-        }
-        FileManager.writeFile(filename, lines);
-        System.out.println("Ghi dữ liệu admin thành công!");
-    }
 }
 
-// ===== NHÓM MÓN ĂN =================================
+
+// ===== NHÓM MÓN ĂN =====
 class FoodItem {
     private String idfood, name, loai, mota;
     private int price;
@@ -956,7 +1089,7 @@ class FoodItem {
     }
 
     public void hienthi(){
-        System.out.printf("%-5s | %-20s | %-10s | %8dđ | %s\n", idfood, name, loai, price, mota);
+        System.out.printf("%-5s | %-20s | %-10s | %-8dđ | %s\n", idfood, name, loai, price, mota);
     }
 }
 
@@ -970,7 +1103,7 @@ class FoodList implements ICRUD {
             System.out.println("Chưa có món ăn nào.");
             return;
         }
-        System.out.printf("%-5s | %-20s | %-10s | %10s | %s\n", "ID", "Tên món", "Loại", "Giá", "Mô tả");
+        System.out.printf("%-5s | %-20s | %-10s | %-8s | %s\n", "ID", "Tên món", "Loại", "Giá", "Mô tả");
         System.out.println("-------------------------------------------------------------------");
         for (FoodItem f : foods) {
             f.hienthi();
@@ -1046,23 +1179,21 @@ class FoodList implements ICRUD {
 
     // Đọc từ file - SỬA: Sử dụng FileManager
     public void readFromFile(String filename) {
-        FileManager.createFileIfNotExists(filename);
         List<String> lines = FileManager.readFile(filename);
         foods.clear();
         for (String line : lines) {
             String[] data = line.split("\\|");
             if (data.length >= 5) {
                 FoodItem food = new FoodItem(
-                        data[0].trim(), // idfood
-                        data[1].trim(), // name
-                        data[3].trim(), // loai
-                        data[4].trim(), // mota
-                        Integer.parseInt(data[2].trim()) // price
+                        data[0], // idfood
+                        data[1], // name
+                        data[3], // loai
+                        data[4], // mota
+                        Integer.parseInt(data[2]) // price
                 );
                 foods.add(food);
             }
         }
-        System.out.println("Đọc dữ liệu món ăn thành công!");
     }
 
     // Ghi vào file - SỬA: Sử dụng FileManager
@@ -1073,9 +1204,9 @@ class FoodList implements ICRUD {
                     f.getIdfood(), f.getName(), f.getPrice(), f.getLoai(), f.getMota()));
         }
         FileManager.writeFile(filename, lines);
-        System.out.println("Ghi dữ liệu món ăn thành công!");
     }
 }
+
 
 // ===== NHÓM ĐẶT HÀNG =====
 class OrderItem {
@@ -1104,33 +1235,46 @@ class OrderItem {
 class Cart {
     List<OrderItem> monan = new ArrayList<>();
     Scanner sc = new Scanner(System.in);
-    private FoodList foodList = new FoodList(); // SỬA: Thêm FoodList
+    private FoodList foodList;
 
-    // SỬA: Thêm phương thức kiểm tra giỏ hàng rỗng
-    public boolean isEmpty() {
-        return monan.isEmpty();
+    // Thêm constructor
+    public Cart(FoodList foodlist) {
+        this.foodList = foodlist; // dùng chung foodlist của adminMenu trong main
     }
 
-    // SỬA: Thêm phương thức xóa giỏ hàng
-    public void clearCart() {
-        monan.clear();
-    }
-
+    // Sửa phương thức datMon
     public void datMon() {
         foodList.showAll();
         System.out.print("Nhập ID món muốn đặt: ");
         String foodId = sc.nextLine();
-        System.out.print("Nhập số lượng: ");
-        int quantity = Integer.parseInt(sc.nextLine());
 
-        FoodItem food = foodList.TimkiembangID(foodId);
-        if (food != null) {
-            ThemMonan(food, quantity);
-            System.out.println("Đã thêm vào giỏ hàng!");
-        } else {
-            System.out.println("Không tìm thấy món!");
+        // Kiểm tra nếu giỏ hàng rỗng hoặc ID không hợp lệ
+        if (foodId == null || foodId.isEmpty()) {
+            System.out.println("ID món không hợp lệ!");
+            return;
+        }
+
+        System.out.print("Nhập số lượng: ");
+        try {
+            int quantity = Integer.parseInt(sc.nextLine());
+
+            if (quantity <= 0) {
+                System.out.println("Số lượng phải lớn hơn 0!");
+                return;
+            }
+
+            FoodItem food = foodList.TimkiembangID(foodId);
+            if (food != null) {
+                ThemMonan(food, quantity);
+                System.out.println("Đã thêm vào giỏ hàng!");
+            } else {
+                System.out.println("Không tìm thấy món!");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Số lượng không hợp lệ!");
         }
     }
+
 
     public void HienThi(){
         System.out.println("\n=== GIỎ HÀNG ===");
@@ -1192,6 +1336,16 @@ class Cart {
         order.setNgaydat(LocalDate.now().toString());
         order.setTrangthai("Đang xử lý");
         return order;
+    }
+
+    public boolean isEmpty() {
+        return monan.isEmpty();
+    }
+
+    // THÊM PHƯƠNG THỨC clearCart()
+    public void clearCart() {
+        monan.clear();
+        System.out.println("Đã xóa giỏ hàng!");
     }
 }
 
@@ -1259,7 +1413,7 @@ class OrderList implements ICRUD {
             don.HienThi();
     }
 
-    // SỬA: Thêm phương thức hiển thị đơn hàng của khách hàng
+    // Phương thức hiển thị đơn hàng của khách hàng
     public void showCustomerOrders(String customerId) {
         System.out.println("\n=== ĐƠN HÀNG CỦA BẠN ===");
         boolean found = false;
@@ -1274,7 +1428,7 @@ class OrderList implements ICRUD {
         }
     }
 
-    // SỬA: Thêm phương thức thêm đơn hàng
+    // Phương thức thêm đơn hàng
     public void addOrder(Order order) {
         dsDon.add(order);
     }
@@ -1360,29 +1514,64 @@ class OrderList implements ICRUD {
         }
     }
 
-    // Đọc từ file - SỬA: Sử dụng FileManager
     public void readFromFile(String filename) {
-        FileManager.createFileIfNotExists(filename);
         List<String> lines = FileManager.readFile(filename);
         dsDon.clear();
+
         for (String line : lines) {
-            // Triển khai logic đọc đơn hàng từ file
-            // (Cần thêm triển khai chi tiết dựa trên cấu trúc file)
+            String[] data = line.split("\\|");
+            if (data.length >= 6) {
+                Order order = new Order();
+                order.setMadon(data[0]);
+                order.setMakhach(data[1]);
+                order.setTongtien(Double.parseDouble(data[2]));
+                order.setNgaydat(data[3]);
+                order.setTrangthai(data[4]);
+
+                // Xử lý danh sách món ăn
+                List<OrderItem> dsMon = new ArrayList<>();
+                if (data.length > 5 && !data[5].isEmpty()) {
+                    String[] items = data[5].split(";");
+                    for (String item : items) {
+                        String[] itemData = item.split(":");
+                        if (itemData.length >= 3) {
+                            FoodItem food = new FoodItem(itemData[0], itemData[1], "", "", 0);
+                            food.setPrice(Integer.parseInt(itemData[2]));
+                            int quantity = Integer.parseInt(itemData[3]);
+                            dsMon.add(new OrderItem(food, quantity));
+                        }
+                    }
+                }
+                order.setDsMon(dsMon);
+                dsDon.add(order);
+            }
         }
-        System.out.println("Đọc dữ liệu đơn hàng thành công!");
     }
 
-    // Ghi vào file - SỬA: Sử dụng FileManager
     public void writeToFile(String filename) {
         List<String> lines = new ArrayList<>();
         for (Order order : dsDon) {
-            // Triển khai logic ghi đơn hàng vào file
-            // (Cần thêm triển khai chi tiết dựa trên cấu trúc file)
+            StringBuilder itemsStr = new StringBuilder();
+            for (OrderItem item : order.getDsMon()) {
+                itemsStr.append(String.format("%s:%s:%d:%d;",
+                        item.getFood().getIdfood(),
+                        item.getFood().getName(),
+                        item.getFood().getPrice(),
+                        item.getSoluong()));
+            }
+
+            lines.add(String.format("%s|%s|%.0f|%s|%s|%s",
+                    order.getMadon(),
+                    order.getMakhach(),
+                    order.getTongtien(),
+                    order.getNgaydat(),
+                    order.getTrangthai(),
+                    itemsStr.toString()));
         }
         FileManager.writeFile(filename, lines);
-        System.out.println("Ghi dữ liệu đơn hàng thành công!");
     }
 }
+
 
 // ===== LỚP PAYMENT VÀ PAYMENTLIST =====
 class Payment {
@@ -1724,25 +1913,23 @@ class PaymentList {
 
     // Đọc từ file
     public void readFromFile(String filename) {
-        FileManager.createFileIfNotExists(filename);
         List<String> lines = FileManager.readFile(filename);
         payments.clear();
         for (String line : lines) {
             String[] data = line.split("\\|");
             if (data.length >= 7) {
                 Payment payment = new Payment(
-                        data[0].trim(), // paymentId
-                        data[1].trim(), // orderId
-                        data[6].trim(), // customerId
-                        Double.parseDouble(data[2].trim()), // amount
-                        data[3].trim(), // paymentDate
-                        data[4].trim(), // paymentMethod
-                        data[5].trim()  // status
+                        data[0], // paymentId
+                        data[1], // orderId
+                        data[6], // customerId
+                        Double.parseDouble(data[2]), // amount
+                        data[3], // paymentDate
+                        data[4], // paymentMethod
+                        data[5]  // status
                 );
                 payments.add(payment);
             }
         }
-        System.out.println("Đọc dữ liệu thanh toán thành công!");
     }
 
     // Ghi vào file
@@ -1754,6 +1941,5 @@ class PaymentList {
                     p.getPaymentMethod(), p.getStatus(), p.getCustomerId()));
         }
         FileManager.writeFile(filename, lines);
-        System.out.println("Ghi dữ liệu thanh toán thành công!");
     }
 }

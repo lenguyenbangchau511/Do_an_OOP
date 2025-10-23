@@ -1,4 +1,1 @@
-C01|khach01|123|Nguyễn Văn A|0901234503
-C02|khach02|123|Nguyễn Văn B|0901234504
-C03|khach03|123|Nguyễn Văn C|0901234505
-C04|khach04|123|Nguyễn Văn D|0901234506
+
