@@ -325,10 +325,7 @@ class AdminMenu {
     // Phương thức
     public void writeData() {
         if (fileManager != null) {
-            System.out.println("Số đơn hàng: " + dsHoaDon.dsDon.size());
-            System.out.println("Số thanh toán: " + dsThanhToan.getPaymentCount());
             fileManager.writeAllData(this);
-            System.out.println("Lưu dữ liệu thành công!");
         }
     }
 
@@ -668,10 +665,25 @@ class Customer extends User {
 
     public void register() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("===== Đăng ký tài khoản khách hàng =====");
+        System.out.println("===== Đăng ký tài khoản cho khách hàng =====");
         System.out.println("ID: " + this.getId());
-        System.out.print("Nhập tên đăng nhập: ");
-        this.setUsername(sc.nextLine());
+        // Kiểm tra trùng username
+        boolean usernameExists;
+        do {
+            System.out.print("Nhập tên đăng nhập: ");
+            String username = sc.nextLine();
+
+            // Kiểm tra trùng username trong cả admin và customer
+            usernameExists = kiemTraTrungUsername(username);
+
+            if (usernameExists) {
+                System.out.println("Tên đăng nhập đã tồn tại! Vui lòng chọn tên khác.");
+            } else {
+                this.setUsername(username);
+                break;
+            }
+        } while (usernameExists);
+
         System.out.print("Nhập mật khẩu: ");
         this.setPassword(sc.nextLine());
         System.out.print("Nhập tên: ");
@@ -679,6 +691,20 @@ class Customer extends User {
         System.out.print("Nhập số điện thoại: ");
         this.setPhonenumber(sc.nextLine());
         this.setRole("customer");
+    }
+
+    // Phương thức kiểm tra trùng username
+    private boolean kiemTraTrungUsername(String username) {
+        // Đọc từ file users.txt để kiểm tra
+        List<String> lines = FileManager.readFile("users.txt");
+
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 2 && data[1].equals(username)) {
+                return true; // Username đã tồn tại
+            }
+        }
+        return false; // Username chưa tồn tại
     }
 
     public void logout(){
@@ -750,11 +776,65 @@ class CustomerList implements ICRUD{
     }
 
     @Override
-    public void add() {
+    public void add(){
+        System.out.println("\n===== THÊM KHÁCH HÀNG MỚI =====");
+
+        // Tạo customer mới
         Customer newCustomer = new Customer(this);
-        newCustomer.register();
+
+        // Nhập thông tin với kiểm tra trùng username
+        Scanner sc = new Scanner(System.in);
+        System.out.println("ID: " + newCustomer.getId());
+
+        // Kiểm tra trùng username
+        boolean usernameExists;
+        do {
+            System.out.print("Nhập tên đăng nhập: ");
+            String username = sc.nextLine();
+
+            // Kiểm tra trùng username trong cả admin và customer
+            usernameExists = kiemTraTrungUsername(username);
+
+            if (usernameExists) {
+                System.out.println("Tên đăng nhập đã tồn tại! Vui lòng chọn tên khác.");
+            } else {
+                newCustomer.setUsername(username);
+                break;
+            }
+        } while (usernameExists);
+
+        System.out.print("Nhập mật khẩu: ");
+        newCustomer.setPassword(sc.nextLine());
+        System.out.print("Nhập tên: ");
+        newCustomer.setName(sc.nextLine());
+        System.out.print("Nhập số điện thoại: ");
+        newCustomer.setPhonenumber(sc.nextLine());
+        newCustomer.setRole("customer");
+
         customers.add(newCustomer);
         System.out.println("Đã thêm khách hàng mới thành công!");
+    }
+
+    // Phương thức kiểm tra trùng username
+    private boolean kiemTraTrungUsername(String username) {
+        // Kiểm tra trong danh sách hiện tại
+        for (Customer c : customers) {
+            if (c.getUsername().equals(username)) {
+                return true;
+            }
+        }
+
+        // Kiểm tra trong admin list (cần truy cập từ bên ngoài)
+        // Đọc trực tiếp từ file để đảm bảo kiểm tra toàn bộ hệ thống
+        List<String> lines = FileManager.readFile("users.txt");
+
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 2 && data[1].equals(username)) {
+                return true; // Username đã tồn tại
+            }
+        }
+        return false; // Username chưa tồn tại
     }
 
     @Override
@@ -905,11 +985,11 @@ class AdminList implements ICRUD{
             System.out.println("Chưa có quản trị viên nào.");
             return;
         }
-        System.out.printf("%-6s | %-15s | %-10s | %-20s | %-20s | %-12s | %-12s\n", "ID", "Username", "Password", "Tên", "Địa chỉ", "SĐT", "Gmail");
+        System.out.printf("%-6s | %-15s | %-20s | %-20s | %-12s | %-12s\n", "ID", "Username", "Password", "Tên", "Địa chỉ", "SĐT", "Gmail");
         System.out.println("--------------------------------------------------------");
         for (Admin a : admins) {
-            System.out.printf("%-6s | %-15s | %-10s | %-20s | %-20s | %-12s | %-12s\n",
-                    a.getId(), a.getUsername(), a.getPassword(), a.getName(), a.getAddress(), a.getPhonenumber(), a.getEmail());
+            System.out.printf("%-6s | %-15s | %-20s | %-20s | %-12s | %-12s\n",
+                    a.getId(), a.getUsername(), a.getName(), a.getAddress(), a.getPhonenumber(), a.getEmail());
         }
     }
 
@@ -918,16 +998,23 @@ class AdminList implements ICRUD{
         System.out.println("\n===== THÊM QUẢN TRỊ VIÊN MỚI =====");
         System.out.print("Nhập ID quản trị viên: ");
         String id = sc.nextLine();
-        // Kiểm tra trùng ID
-        for (Admin a : admins) {
-            if (a.getId().equalsIgnoreCase(id)) {
-                System.out.println("ID này đã tồn tại. Không thể thêm mới!");
-                return;
-            }
-        }
 
-        System.out.print("Nhập tên đăng nhập: ");
-        String username = sc.nextLine();
+        String username;
+
+        // Kiểm tra trùng username
+        boolean usernameExists;
+        do {
+            System.out.print("Nhập tên đăng nhập: ");
+            username = sc.nextLine();
+
+            // Kiểm tra trùng username trong cả admin và customer
+            usernameExists = kiemTraTrungUsername(username);
+
+            if (usernameExists) {
+                System.out.println("Tên đăng nhập đã tồn tại! Vui lòng chọn tên khác.");
+            }
+        } while (usernameExists);
+
         System.out.print("Nhập mật khẩu: ");
         String password = sc.nextLine();
         System.out.print("Nhập họ tên: ");
@@ -942,6 +1029,20 @@ class AdminList implements ICRUD{
         Admin newAdmin = new Admin(id, username, password, "admin", name, phone, address, email);
         admins.add(newAdmin);
         System.out.println("Thêm quản trị viên thành công!");
+    }
+
+    // Phương thức kiểm tra trùng username
+    private boolean kiemTraTrungUsername(String username) {
+        // Đọc từ file users.txt để kiểm tra
+        List<String> lines = FileManager.readFile("users.txt");
+
+        for (String line : lines) {
+            String[] data = line.split("\\|");
+            if (data.length >= 2 && data[1].equals(username)) {
+                return true; // Username đã tồn tại
+            }
+        }
+        return false; // Username chưa tồn tại
     }
 
     @Override
