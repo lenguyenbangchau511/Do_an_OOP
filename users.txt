@@ -1,6 +1,20 @@
-A001|admin1|321|admin|Nguyễn An|HCM, Q1|0901234501|a@gmail.com
-A002|admin2|321|admin|Lý Bình|HCM, Q2|0901234502|b@gmail.com
-C001|khachhang01|123|customer|Nguyễn Văn A|0901234503
-C002|khachhang02|123|customer|Nguyễn Văn B|0901234504
-C003|khachhang03|123|customer|Nguyễn Văn C|0901234505
-C004|khachhang04|123|customer|Nguyễn Văn D|0901234506
+A001|admin1|321|admin|Tạ Mẫn Nhi|HCM, Q5|0901238871|admin1@gmail.com
+A002|admin2|321|admin|Hồ Nhược Lam|HCM, Q7|0901236145|admin2@gmail.com
+A003|admin3|321|admin|Vũ Dao|HCM, Q5|0901238154|admin3@gmail.com
+A004|admin4|321|admin|Kha Tịnh Yên|HCM, Q5|0901239583|admin4@gmail.com
+A005|admin5|321|admin|Ngụy Mộc Miên|HCM, Q5|0901235050|admin5@gmail.com
+A006|admin6|321|admin|Lâm Thùy Vy|HCM, Q6|0901230296|admin6@gmail.com
+A007|admin7|321|admin|Trần Giao Nhi|HCM, Q1|0901234443|admin7@gmail.com
+A008|admin8|321|admin|Phùng Ánh Du|HCM, Q7|0901236890|admin8@gmail.com
+A009|admin9|321|admin|Đoàn Ngọc Lâm|HCM, Q10|0901230133|admin9@gmail.com
+A010|admin10|321|admin|Hà Uyển Nhi|HCM, Q2|0901235671|admin10@gmail.com
+C001|khachhang01|123|customer|Trần Thiên Dư|0901343380
+C002|khachhang02|123|customer|Lục Hạo Phong|0901343530
+C003|khachhang03|123|customer|Âu Dương Lâm|0901344406
+C004|khachhang04|123|customer|Tề Uyên|0901345922
+C005|khachhang05|123|customer|Doãn Khải Minh|0901340519
+C006|khachhang06|123|customer|Vũ An Phong|0901341283
+C007|khachhang07|123|customer|Nguyễn Duy Khang|0901344257
+C008|khachhang08|123|customer|Trịnh Hoài Nam|0901341863
+C009|khachhang09|123|customer|Phan Tuấn Vũ|0901344439
+C010|khachhang10|123|customer|Tạ Thiên Bảo|0901348367

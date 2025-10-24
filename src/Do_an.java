@@ -58,7 +58,10 @@ public class Do_an {
                     Customer newCustomer = new Customer(adminMenu.getDsKhachHang());
                     newCustomer.register();
                     adminMenu.getDsKhachHang().addCustomer(newCustomer);
+
+                    // GHI NGAY VÀO FILE sau khi đăng ký
                     fileManager.writeAllData(adminMenu);
+                    System.out.println("Đăng ký thành công! Bạn có thể đăng nhập ngay.");
                     break;
                 case 3:
                     adminMenu.getDsMonAn().showAll();
@@ -187,6 +190,106 @@ class FileManager {
 }
 
 
+// ===== INTERFACE VÀ LỚP TRỪU TƯỢNG =====
+interface ICRUD {
+    void showAll();
+    void add();
+    void update();
+    void delete();
+    void search();
+}
+
+abstract class User {
+    protected String id;
+    protected String username;
+    protected String password;
+    protected String role;
+    protected String name;
+    protected String phonenumber;
+
+    public User(String id, String username, String password, String role, String name, String phonenumber) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.name = name;
+        this.phonenumber = phonenumber;
+    }
+
+    // GETTERS
+    public String getId() { return id; }
+    public String getUsername() { return username; }
+    public String getPassword() { return password; }
+    public String getRole() { return role; }
+    public String getName() { return name; }
+    public String getPhonenumber() { return phonenumber; }
+
+    // SETTERS
+    public void setId(String id) { this.id = id; }
+    public void setUsername(String username) { this.username = username; }
+    public void setPassword(String password) { this.password = password; }
+    public void setRole(String role) { this.role = role; }
+    public void setName(String name) { this.name = name; }
+    public void setPhonenumber(String phonenumber) { this.phonenumber = phonenumber; }
+
+    // Phương thức đăng nhập chung
+    class Login {
+        public static User login(String username, String password) {
+            List<String> lines = FileManager.readFile("users.txt");
+
+            for (String line : lines) {
+                String[] data = line.split("\\|");
+
+                // data[1] = username, data[2] = password
+                if (data[1].equals(username) && data[2].equals(password)) {
+                    String role = data[3];  // data[3] = role
+
+                    if ("admin".equals(role)) {
+                        // Tạo đối tượng Admin
+                        return new Admin(
+                                data[0],  // ID
+                                data[1],  // Username
+                                data[2],  // Password
+                                data[3],  // Role
+                                data[4],  // Name
+                                data[5],  // Phone
+                                data.length > 6 ? data[6] : "",       // Address (tạm để trống)
+                                data.length > 7 ? data[7] : ""        // Email (tạm để trống)
+                        );
+                    } else {
+                        // Tạo đối tượng Customer
+                        return new Customer(
+                                data[0],  // ID
+                                data[1],  // Username
+                                data[2],  // Password
+                                data[3],  // Role
+                                data[4],  // Name
+                                data[5]   // Phone
+                        );
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    // Phương thức hiển thị thông tin theo role
+    public abstract void displayInfo();
+
+    // Phương thức phân quyền
+    public boolean PhanQuyen(String permission) {
+        switch (this.role) {
+            case "admin":
+                return true; // Admin có tất cả quyền
+            case "customer":
+                return "view_menu".equals(permission) || "place_order".equals(permission) || "view_own_orders".equals(permission);
+            default:
+                return false;
+        }
+    }
+}
+
+
 // ===== GIAO DIỆN ĐIỀU KHIỂN =====
 class AdminMenu {
     private Admin AdminHienTai;
@@ -221,8 +324,12 @@ class AdminMenu {
 
     // Phương thức
     public void writeData() {
-        if (fileManager != null)
+        if (fileManager != null) {
+            System.out.println("Số đơn hàng: " + dsHoaDon.dsDon.size());
+            System.out.println("Số thanh toán: " + dsThanhToan.getPaymentCount());
             fileManager.writeAllData(this);
+            System.out.println("Lưu dữ liệu thành công!");
+        }
     }
 
     public void choice(){
@@ -458,19 +565,45 @@ class CustomerMenu {
                     if (cart.isEmpty()) {
                         System.out.println("Giỏ hàng trống!");
                     } else {
-                        Order newOrder = cart.Xacnhandon(KhachHangHienTai.getId());
-                        if (newOrder != null) {
-                            // Thêm đơn hàng vào danh sách của adminMenu
-                            adminMenu.getDsHoaDon().addOrder(newOrder);
+                        // Hiển thị giỏ hàng trước khi xác nhận
+                        cart.HienThi();
 
-                            // Thêm thanh toán vào danh sách của adminMenu
-                            adminMenu.getDsThanhToan().addPaymentFromOrder(newOrder);
+                        System.out.print("Bạn có chắc chắn muốn đặt hàng? (y/n): ");
+                        String confirm = sc.nextLine();
 
-                            // Lưu toàn bộ dữ liệu
-                            adminMenu.writeData();
+                        if (confirm.equalsIgnoreCase("y")) {
+                            Order newOrder = cart.Xacnhandon(KhachHangHienTai.getId());
+                            if (newOrder != null) {
+                                try {
+                                    // Thêm đơn hàng vào danh sách
+                                    adminMenu.getDsHoaDon().addOrder(newOrder);
+                                    System.out.println("Đã thêm đơn hàng vào danh sách!");
 
-                            System.out.println("Đặt hàng thành công! Mã đơn: " + newOrder.getMadon());
-                            cart.clearCart();
+                                    // Tạo thanh toán từ đơn hàng
+                                    adminMenu.getDsThanhToan().addPaymentFromOrder(newOrder);
+                                    System.out.println("Đã tạo thông tin thanh toán!");
+
+                                    // Lưu dữ liệu
+                                    adminMenu.writeData();
+
+                                    System.out.println("====================================");
+                                    System.out.println("ĐẶT HÀNG THÀNH CÔNG!");
+                                    System.out.println("Mã đơn hàng: " + newOrder.getMadon());
+                                    System.out.println("Tổng tiền: " + newOrder.getTongtien() + " VND");
+                                    System.out.println("Trạng thái: " + newOrder.getTrangthai());
+                                    System.out.println("====================================");
+
+                                    // Xóa giỏ hàng sau khi đặt hàng thành công
+                                    cart.clearCart();
+
+                                } catch (Exception e) {
+                                    System.out.println("Lỗi khi lưu đơn hàng: " + e.getMessage());
+                                }
+                            } else {
+                                System.out.println("Không thể tạo đơn hàng!");
+                            }
+                        } else {
+                            System.out.println("Đã hủy đặt hàng!");
                         }
                     }
                     break;
@@ -486,106 +619,6 @@ class CustomerMenu {
                     break;
             }
         } while (choice != 0);
-    }
-}
-
-
-// ===== INTERFACE VÀ LỚP TRỪU TƯỢNG =====
-interface ICRUD {
-    void showAll();
-    void add();
-    void update();
-    void delete();
-    void search();
-}
-
-abstract class User {
-    protected String id;
-    protected String username;
-    protected String password;
-    protected String role;
-    protected String name;
-    protected String phonenumber;
-
-    public User(String id, String username, String password, String role, String name, String phonenumber) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.role = role;
-        this.name = name;
-        this.phonenumber = phonenumber;
-    }
-
-    // GETTERS
-    public String getId() { return id; }
-    public String getUsername() { return username; }
-    public String getPassword() { return password; }
-    public String getRole() { return role; }
-    public String getName() { return name; }
-    public String getPhonenumber() { return phonenumber; }
-
-    // SETTERS
-    public void setId(String id) { this.id = id; }
-    public void setUsername(String username) { this.username = username; }
-    public void setPassword(String password) { this.password = password; }
-    public void setRole(String role) { this.role = role; }
-    public void setName(String name) { this.name = name; }
-    public void setPhonenumber(String phonenumber) { this.phonenumber = phonenumber; }
-
-    // Phương thức đăng nhập chung
-    class Login {
-        public static User login(String username, String password) {
-            List<String> lines = FileManager.readFile("users.txt");
-
-            for (String line : lines) {
-                String[] data = line.split("\\|");
-
-                // data[1] = username, data[2] = password
-                if (data[1].equals(username) && data[2].equals(password)) {
-                    String role = data[3];  // data[3] = role
-
-                    if ("admin".equals(role)) {
-                        // Tạo đối tượng Admin
-                        return new Admin(
-                                data[0],  // ID
-                                data[1],  // Username
-                                data[2],  // Password
-                                data[3],  // Role
-                                data[4],  // Name
-                                data[5],  // Phone
-                                data.length > 6 ? data[6] : "",       // Address (tạm để trống)
-                                data.length > 7 ? data[7] : ""        // Email (tạm để trống)
-                        );
-                    } else {
-                        // Tạo đối tượng Customer
-                        return new Customer(
-                                data[0],  // ID
-                                data[1],  // Username
-                                data[2],  // Password
-                                data[3],  // Role
-                                data[4],  // Name
-                                data[5]   // Phone
-                        );
-                    }
-                }
-            }
-            return null;
-        }
-    }
-
-    // Phương thức hiển thị thông tin theo role
-    public abstract void displayInfo();
-
-    // Phương thức phân quyền
-    public boolean PhanQuyen(String permission) {
-        switch (this.role) {
-            case "admin":
-                return true; // Admin có tất cả quyền
-            case "customer":
-                return "view_menu".equals(permission) || "place_order".equals(permission) || "view_own_orders".equals(permission);
-            default:
-                return false;
-        }
     }
 }
 
@@ -636,6 +669,7 @@ class Customer extends User {
     public void register() {
         Scanner sc = new Scanner(System.in);
         System.out.println("===== Đăng ký tài khoản khách hàng =====");
+        System.out.println("ID: " + this.getId());
         System.out.print("Nhập tên đăng nhập: ");
         this.setUsername(sc.nextLine());
         System.out.print("Nhập mật khẩu: ");
@@ -645,8 +679,6 @@ class Customer extends User {
         System.out.print("Nhập số điện thoại: ");
         this.setPhonenumber(sc.nextLine());
         this.setRole("customer");
-
-        System.out.println("Khách hàng " + this.getName() + " đã đăng ký thành công với ID = " + this.getId());
     }
 
     public void logout(){
@@ -873,11 +905,11 @@ class AdminList implements ICRUD{
             System.out.println("Chưa có quản trị viên nào.");
             return;
         }
-        System.out.printf("%-6s | %-15s | %-20s | %-12s\n", "ID", "Username", "Tên", "SĐT");
+        System.out.printf("%-6s | %-15s | %-10s | %-20s | %-20s | %-12s | %-12s\n", "ID", "Username", "Password", "Tên", "Địa chỉ", "SĐT", "Gmail");
         System.out.println("--------------------------------------------------------");
         for (Admin a : admins) {
-            System.out.printf("%-6s | %-15s | %-20s | %-12s\n",
-                    a.getId(), a.getUsername(), a.getName(), a.getPhonenumber());
+            System.out.printf("%-6s | %-15s | %-10s | %-20s | %-20s | %-12s | %-12s\n",
+                    a.getId(), a.getUsername(), a.getPassword(), a.getName(), a.getAddress(), a.getPhonenumber(), a.getEmail());
         }
     }
 
@@ -1266,7 +1298,6 @@ class Cart {
             FoodItem food = foodList.TimkiembangID(foodId);
             if (food != null) {
                 ThemMonan(food, quantity);
-                System.out.println("Đã thêm vào giỏ hàng!");
             } else {
                 System.out.println("Không tìm thấy món!");
             }
@@ -1307,8 +1338,10 @@ class Cart {
                 int newSoluong = Integer.parseInt(sc.nextLine());
                 i.setSoluong(newSoluong);
                 System.out.println("Đã cập nhật số lượng món");
-                return;
+            } else {
+                System.out.println("Số lượng phải lớn hơn 0.");
             }
+            return;
         }
         System.out.println("Không tìm thấy món.");
     }
@@ -1327,15 +1360,36 @@ class Cart {
     }
 
     public Order Xacnhandon(String makhach){
-        if (monan.isEmpty()) return null;
-        Order order = new Order();
-        order.setMadon("ORD" + System.currentTimeMillis()); // Tạo mã đơn tự động
-        order.setMakhach(makhach);
-        order.setDsMon(new ArrayList<>(monan)); // SỬA: Chuyển danh sách món
-        order.setTongtien(Tinhtongtien());
-        order.setNgaydat(LocalDate.now().toString());
-        order.setTrangthai("Đang xử lý");
-        return order;
+        if (monan.isEmpty()) {
+            System.out.println("Giỏ hàng trống, không thể tạo đơn hàng");
+            return null;
+        }
+        try {
+            Order order = new Order();
+            // Tạo mã đơn hàng duy nhất
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            order.setMadon("ORD" + timestamp.substring(timestamp.length() - 6));
+            order.setMakhach(makhach);
+
+            // Tạo danh sách món mới để tránh tham chiếu
+            List<OrderItem> dsMonMoi = new ArrayList<>();
+            for (OrderItem item : monan) {
+                // Tạo OrderItem mới với thông tin từ item hiện tại
+                OrderItem newItem = new OrderItem(item.getFood(), item.getSoluong());
+                dsMonMoi.add(newItem);
+            }
+
+            order.setDsMon(dsMonMoi);
+            order.setTongtien(Tinhtongtien());
+            order.setNgaydat(LocalDate.now().toString());
+            order.setTrangthai("Đang xử lý");
+
+            System.out.println("Đã tạo đơn hàng: " + order.getMadon());
+            return order;
+        } catch (Exception e) {
+            System.out.println("Lỗi khi tạo đơn hàng: " + e.getMessage());
+            return null;
+        }
     }
 
     public boolean isEmpty() {
@@ -1429,8 +1483,23 @@ class OrderList implements ICRUD {
     }
 
     // Phương thức thêm đơn hàng
-    public void addOrder(Order order) {
-        dsDon.add(order);
+    public boolean addOrder(Order order) {
+        try {
+            // Kiểm tra trùng mã đơn hàng
+            for (Order existingOrder : dsDon) {
+                if (existingOrder.getMadon().equals(order.getMadon())) {
+                    System.out.println("Mã đơn hàng đã tồn tại!");
+                    return false;
+                }
+            }
+
+            dsDon.add(order);
+            System.out.println("Đã thêm đơn hàng: " + order.getMadon());
+            return true;
+        } catch (Exception e) {
+            System.out.println("Lỗi khi thêm đơn hàng: " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -1629,7 +1698,14 @@ class PaymentList {
     private ArrayList<Payment> payments = new ArrayList<>();
     private Scanner sc = new Scanner(System.in);
 
-    // === CÁC CHỨC NĂNG CHÍNH ===
+    // Thêm getter để truy cập từ bên ngoài
+    public ArrayList<Payment> getPayments() {
+        return payments;
+    }
+
+    public int getPaymentCount() {
+        return payments.size();
+    }
 
     // 1. Hiển thị tất cả giao dịch (có phân trang)
     public void showAll() {
@@ -1816,20 +1892,24 @@ class PaymentList {
 
     // 6. Thêm giao dịch thanh toán mới (tự động từ đơn hàng)
     public void addPaymentFromOrder(Order order) {
-        String paymentId = "PAY" + System.currentTimeMillis();
+        try {
+            String paymentId = "PAY" + System.currentTimeMillis();
 
-        Payment newPayment = new Payment(
-                paymentId,
-                order.getMadon(),
-                order.getMakhach(),
-                order.getTongtien(),
-                LocalDate.now().toString(),
-                "Chưa chọn", // Phương thức sẽ được chọn khi thanh toán
-                "Đang xử lý"
-        );
+            Payment newPayment = new Payment(
+                    paymentId,
+                    order.getMadon(),
+                    order.getMakhach(),
+                    order.getTongtien(),
+                    LocalDate.now().toString(),
+                    "Chờ thanh toán", // Trạng thái ban đầu
+                    "Chưa chọn"
+            );
 
-        payments.add(newPayment);
-        System.out.println("Đã tạo giao dịch thanh toán: " + paymentId);
+            payments.add(newPayment);
+            System.out.println("Đã tạo giao dịch thanh toán: " + paymentId + " cho đơn hàng: " + order.getMadon());
+        } catch (Exception e) {
+            System.out.println("Lỗi khi tạo thanh toán: " + e.getMessage());
+        }
     }
 
     // 7. Xử lý thanh toán (cho khách hàng)
