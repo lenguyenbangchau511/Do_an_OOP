@@ -18,3 +18,4 @@ C007|khachhang07|123|customer|Nguyễn Duy Khang|0901344257
 C008|khachhang08|123|customer|Trịnh Hoài Nam|0901341863
 C009|khachhang09|123|customer|Phan Tuấn Vũ|0901344439
 C010|khachhang10|123|customer|Tạ Thiên Bảo|0901348367
+C011|khachhang11|123|customer|Chu An|09091213

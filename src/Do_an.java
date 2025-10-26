@@ -534,12 +534,13 @@ class CustomerMenu {
     public void choice(){
         do {
             System.out.println("\n===== MENU KHÁCH HÀNG =====");
-            System.out.println("1. Xem menu");
-            System.out.println("2. Đặt món");
-            System.out.println("3. Xem giỏ hàng");
-            System.out.println("4. Xem đơn hàng của tôi");
-            System.out.println("5. Thanh toán");
-            System.out.println("6. Sửa thông tin cá nhân");
+            System.out.println("1. Sửa thông tin cá nhân");
+            System.out.println("2. Xem menu");
+            System.out.println("3. Chọn món");
+            System.out.println("4. Xem giỏ hàng");
+            System.out.println("5. Xac nhan dat hang");
+            System.out.println("6. Xem don hang");
+            System.out.println("7. Thanh toan");
             System.out.println("0. Đăng xuất.");
             System.out.print("\nChọn: ");
             choice = sc.nextInt();
@@ -569,7 +570,7 @@ class CustomerMenu {
                         String confirm = sc.nextLine();
 
                         if (confirm.equalsIgnoreCase("y")) {
-                            Order newOrder = cart.Xacnhandon(KhachHangHienTai.getId());
+                            Order newOrder = cart.Xacnhandon(KhachHangHienTai.getId(), adminMenu.getDsHoaDon());
                             if (newOrder != null) {
                                 try {
                                     // Thêm đơn hàng vào danh sách
@@ -1460,17 +1461,15 @@ class Cart {
         return tong;
     }
 
-    public Order Xacnhandon(String makhach){
+    public Order Xacnhandon(String makhach, OrderList orderList){
         if (monan.isEmpty()) {
             System.out.println("Giỏ hàng trống, không thể tạo đơn hàng");
             return null;
         }
         try {
             Order order = new Order();
-            // Tạo mã đơn hàng duy nhất
-            String timestamp = String.valueOf(System.currentTimeMillis());
-            order.setMadon("ORD" + timestamp.substring(timestamp.length() - 6));
-            order.setMakhach(makhach);
+            // Tạo mã đơn hàng don gian
+            order.setMadon(orderList.taoMaDon());
 
             // Tạo danh sách món mới để tránh tham chiếu
             List<OrderItem> dsMonMoi = new ArrayList<>();
@@ -1507,7 +1506,7 @@ class Cart {
 class Order {
     private String madon, makhach;
     private List<OrderItem> dsMon; // SỬA: Dùng List<OrderItem> thay vì ArrayList<FoodItem>
-    private double tongtien;
+    private int tongtien;
     private String ngaydat;
     private String trangthai;
 
@@ -1515,7 +1514,7 @@ class Order {
         this("", "", new ArrayList<>(), 0, "", "Đang xử lý");
     }
 
-    public Order(String madon, String makhach, List<OrderItem> dsMon, double tongtien, String ngaydat, String trangthai) {
+    public Order(String madon, String makhach, List<OrderItem> dsMon, int tongtien, String ngaydat, String trangthai) {
         this.madon = madon;
         this.makhach = makhach;
         this.dsMon = dsMon;
@@ -1527,19 +1526,18 @@ class Order {
     public String getMadon() {return madon;}
     public String getMakhach() {return makhach;}
     public List<OrderItem> getDsMon() {return dsMon;}
-    public double getTongtien() {return tongtien;}
+    public int getTongtien() {return tongtien;}
     public String getNgaydat() {return ngaydat;}
     public String getTrangthai() {return trangthai;}
 
     public void setMadon(String madon) {this.madon = madon;}
     public void setMakhach(String makhach) {this.makhach = makhach;}
     public void setDsMon(List<OrderItem> dsMon) {this.dsMon = dsMon;}
-    public void setTongtien(double tongtien) {this.tongtien = tongtien;}
+    public void setTongtien(int tongtien) {this.tongtien = tongtien;}
     public void setNgaydat(String ngaydat) {this.ngaydat = ngaydat;}
     public void setTrangthai(String trangthai) {this.trangthai = trangthai;}
 
     public void HienThi(){
-        System.out.println("\n=== CHI TIẾT ĐƠN HÀNG ===");
         System.out.println("Mã đơn: " + madon);
         System.out.println("Mã khách: " + makhach);
         System.out.println("Ngày đặt: " + ngaydat);
@@ -1548,7 +1546,7 @@ class Order {
         for (OrderItem item : dsMon) {
             item.hienthi();
         }
-        System.out.println("Tổng tiền: " + tongtien + " VND");
+        System.out.println("Tổng tiền: " + tongtien + " VND"); // Ép kiểu int để khi in ra không xuất hiện dấu thập phân
         System.out.println("------------------");
     }
 }
@@ -1570,7 +1568,7 @@ class OrderList implements ICRUD {
 
     // Phương thức hiển thị đơn hàng của khách hàng
     public void showCustomerOrders(String customerId) {
-        System.out.println("\n=== ĐƠN HÀNG CỦA BẠN ===");
+        System.out.println("\n====== CHI TIET DON HANG ======");
         boolean found = false;
         for (Order don : dsDon) {
             if (don.getMakhach().equals(customerId)) {
@@ -1646,7 +1644,7 @@ class OrderList implements ICRUD {
         System.out.print("Nhập ngày đặt (yyyy-mm-dd): ");
         String ngaydat = sc.nextLine();
 
-        double tongtien = 0;
+        int tongtien = 0;
         for (OrderItem item : dsMon) {
             tongtien += item.getGia() * item.getSoluong();
         }
@@ -1684,6 +1682,21 @@ class OrderList implements ICRUD {
         }
     }
 
+    public String taoMaDon() {
+        int maxId = 0;
+        for (Order order : dsDon) {
+            if (order.getMadon().startsWith("ORD")) {
+                try {
+                    int idNum = Integer.parseInt(order.getMadon().substring(3));
+                    if (idNum > maxId) maxId = idNum;
+                } catch (NumberFormatException e) {
+                    // Bỏ qua nếu không parse được
+                }
+            }
+        }
+        return String.format("ORD%03d", maxId + 1);
+    }
+
     public void readFromFile(String filename) {
         List<String> lines = FileManager.readFile(filename);
         dsDon.clear();
@@ -1694,7 +1707,7 @@ class OrderList implements ICRUD {
                 Order order = new Order();
                 order.setMadon(data[0]);
                 order.setMakhach(data[1]);
-                order.setTongtien(Double.parseDouble(data[2]));
+                order.setTongtien(Integer.parseInt(data[2]));
                 order.setNgaydat(data[3]);
                 order.setTrangthai(data[4]);
 
@@ -1730,7 +1743,7 @@ class OrderList implements ICRUD {
                         item.getSoluong()));
             }
 
-            lines.add(String.format("%s|%s|%.0f|%s|%s|%s",
+            lines.add(String.format("%s|%s|%d|%s|%s|%s",
                     order.getMadon(),
                     order.getMakhach(),
                     order.getTongtien(),
@@ -1806,6 +1819,22 @@ class PaymentList {
 
     public int getPaymentCount() {
         return payments.size();
+    }
+
+    // PHUONG THUC
+    public String taoMaThanhToan() {
+        int maxId = 0;
+        for (Payment payment : payments) {
+            if (payment.getPaymentId().startsWith("PAY")) {
+                try {
+                    int idNum = Integer.parseInt(payment.getPaymentId().substring(3));
+                    if (idNum > maxId) maxId = idNum;
+                } catch (NumberFormatException e) {
+                    // Bỏ qua nếu không parse được
+                }
+            }
+        }
+        return String.format("PAY%03d", maxId + 1);
     }
 
     // 1. Hiển thị tất cả giao dịch (có phân trang)
