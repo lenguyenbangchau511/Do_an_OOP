@@ -1,10 +1,10 @@
-F01|Burger Bò|45000|Burger|Burger bò phô mai thơm ngon
-F02|Burger Gà|40000|Burger|Burger gà giòn đặc biệt
-F03|Gà Rán Truyền Thống|35000|Gà|Gà rán da giòn vị truyền thống
-F04|Gà Cay|37000|Gà|Gà rán giòn vị cay nồng
-F05|Gà Viên Phô Mai|42000|Gà|Gà viên nhân phô mai béo ngậy, giòn tan
-F06|Mì Ý Sốt Bò Bằm|48000|Mì|Mì Ý mềm thơm với sốt bò bằm đậm đà
-F07|Khoai Tây Chiên|20000|Ăn kèm|Khoai tây chiên vàng giòn
-F08|Salad Rau Trộn|25000|Ăn kèm|Salad tươi mát với sốt mè
-F09|Coca Cola|15000|Nước|Chai Coca Cola 330ml
-F10|Trà Chanh|18000|Nước|Ly trà chanh mát lạnh
+F01|Burger Bo|45000|Burger|Burger bo pho mai thom ngon
+F02|Burger Ga|40000|Burger|Burger ga gion dac biet
+F03|Ga Ran Truyen Thong|35000|Ga|Ga ran da gion vi truyen thong
+F04|Ga Cay|37000|Ga|Ga ran gion vi cay nong
+F05|Ga Vien Pho Mai|42000|Ga|Ga vien nhan pho mai beo ngay, gion tan
+F06|Mi Y Sot Bo Bam|48000|Mi|Mi Y mem thom voi sot bo bam dam da
+F07|Khoai Tay Chien|20000|An kem|Khoai tay chien vang gion
+F08|Salad Rau Tron|25000|An kem|Salad tuoi mat voi sot me
+F09|Coca Cola|15000|Nuoc|Chai Coca Cola 330ml
+F10|Tra Chanh|18000|Nuoc|Ly tra chanh mat lanh
