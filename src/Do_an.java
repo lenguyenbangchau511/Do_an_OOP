@@ -22,8 +22,15 @@ public class Do_an {
             System.out.println("3. Xem menu");
             System.out.println("0. Thoat");
             System.out.print("\nNhap lua chon: ");
-            luachon = sc.nextInt();
-            sc.nextLine();
+            try {
+                luachon = sc.nextInt();
+                sc.nextLine();
+            } catch (Exception e) {
+                System.out.println("Vui long nhap so!");
+                sc.nextLine();
+                luachon = -1;
+                continue;
+            }
 
             switch (luachon){
                 case 1:
@@ -906,8 +913,19 @@ class DSNguoiDung implements ChucNang {
             return;
         }
 
-        dsNguoiDung.remove(nguoiDung);
-        System.out.println("Xoa nguoi dung thanh cong!");
+        // Hien thi thong tin nguoi dung truoc khi xoa
+        System.out.println("\nTHONG TIN NGUOI DUNG SE BI XOA:");
+        nguoiDung.hienThiThongTin();
+
+        System.out.print("\nBan co CHAC CHAN muon xoa nguoi dung nay? (y/n): ");
+        String xacNhan = sc.nextLine();
+
+        if (xacNhan.equalsIgnoreCase("y")) {
+            dsNguoiDung.remove(nguoiDung);
+            System.out.println("Xoa nguoi dung thanh cong!");
+        } else {
+            System.out.println("Da huy thao tac xoa!");
+        }
     }
 
     @Override
@@ -1258,7 +1276,7 @@ class DSMonAn implements ChucNang {
     @Override
     public void xoa() {
         System.out.println("\n===== XOA MON AN =====");
-        System.out.print("Nhap ma mon can xoa: ");
+        System.out.print("Nhap ma mon an can xoa: ");
         String maMon = sc.nextLine();
 
         MonAn monAn = null;
@@ -1273,8 +1291,19 @@ class DSMonAn implements ChucNang {
             return;
         }
 
-        dsMonAn.remove(monAn);
-        System.out.println("Xoa mon an thanh cong!");
+        // Hien thi thong tin mon an truoc khi xoa
+        System.out.println("\nTHONG TIN MON AN SE BI XOA:");
+        monAn.hienThiThongTin();
+
+        System.out.print("\nBan co CHAC CHAN muon xoa mon an nay? (y/n): ");
+        String xacNhan = sc.nextLine();
+
+        if (xacNhan.equalsIgnoreCase("y")) {
+            dsMonAn.remove(monAn);
+            System.out.println("Xoa mon an thanh cong!");
+        } else {
+            System.out.println("Da huy thao tac xoa!");
+        }
     }
 
     @Override
@@ -1395,13 +1424,22 @@ class GioHang {
             return;
         }
 
-        System.out.print("Nhap so luong: ");
-        int soLuong = sc.nextInt();
-        sc.nextLine(); // clear buffer
+        int soLuong;
+        while (true) {
+            System.out.print("Nhap so luong: ");
+            try {
+                soLuong = sc.nextInt();
+                sc.nextLine();
 
-        if (soLuong <= 0) {
-            System.out.println("So luong phai lon hon 0!");
-            return;
+                if (soLuong <= 0) {
+                    System.out.println("So luong phai lon hon 0! Vui long nhap lai.");
+                    continue;
+                }
+                break;
+            } catch (Exception e) {
+                System.out.println("Vui long nhap so nguyen hop le!");
+                sc.nextLine();
+            }
         }
 
         // Kiem tra xem mon da co trong gio chua
@@ -1453,7 +1491,7 @@ class GioHang {
         String maDonMoi = taoMaDonTuDong(dsHoaDon);
 
         // Lay ngay hien tai
-        String ngayDat = LocalDate.now().toString();
+        String ngayDat = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
         // Tinh tong tien
         int tongTien = 0;
@@ -1960,7 +1998,7 @@ class DSThanhToan implements ChucNang {
     // Them giao dich tu don hang
     public void themThanhToanTuHoaDon(HoaDon hoaDon, String phuongThuc) {
         String maGiaoDichMoi = taoMaGiaoDichTuDong();
-        String ngayHienTai = LocalDate.now().toString();
+        String ngayHienTai = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
         ThanhToan thanhToanMoi = new ThanhToan(maGiaoDichMoi, hoaDon.getMaDon(), ngayHienTai,
                 hoaDon.getTongTien(), phuongThuc, "Cho thanh toan", hoaDon.getMaKhachHang());
