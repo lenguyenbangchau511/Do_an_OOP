@@ -1,21 +1,20 @@
-A001|admin1|321|admin|Vu Đào|HCM, Q5|0901238871|admin1@gmail.com
-A002|admin2|321|admin|Hồ Nhược Lam|HCM, Q7|0901236145|admin2@gmail.com
-A003|admin3|321|admin|Vũ Dao|HCM, Q5|0901238154|admin3@gmail.com
-A004|admin4|321|admin|Kha Tịnh Yên|HCM, Q5|0901239583|admin4@gmail.com
-A005|admin5|321|admin|Ngụy Mộc Miên|HCM, Q5|0901235050|admin5@gmail.com
-A006|admin6|321|admin|Lâm Thùy Vy|HCM, Q6|0901230296|admin6@gmail.com
-A007|admin7|321|admin|Trần Giao Nhi|HCM, Q1|0901234443|admin7@gmail.com
-A008|admin8|321|admin|Phùng Ánh Du|HCM, Q7|0901236890|admin8@gmail.com
-A009|admin9|321|admin|Đoàn Ngọc Lâm|HCM, Q10|0901230133|admin9@gmail.com
-A010|admin10|321|admin|Hà Uyển Nhi|HCM, Q2|0901235671|admin10@gmail.com
-C001|khachhang01|123|customer|Trần Thiên Dư|0901343380
-C002|khachhang02|123|customer|Lục Hạo Phong|0901343530
-C003|khachhang03|123|customer|Âu Dương Lâm|0901344406
-C004|khachhang04|123|customer|Tề Uyên|0901345922
-C005|khachhang05|123|customer|Doãn Khải Minh|0901340519
-C006|khachhang06|123|customer|Vũ An Phong|0901341283
-C007|khachhang07|123|customer|Nguyễn Duy Khang|0901344257
-C008|khachhang08|123|customer|Trịnh Hoài Nam|0901341863
-C009|khachhang09|123|customer|Phan Tuấn Vũ|0901344439
-C010|khachhang10|123|customer|Tạ Thiên Bảo|0901348367
-C011|khachhang11|123|customer|Chu An|09091213
+A001|qtv1|321|qtv|Vu Dao|0901238871|HCM, Q5|qtv1@gmail.com
+A002|qtv2|321|qtv|Ho Nhuoc Lam|0901236145|HCM, Q7|qtv2@gmail.com
+A003|qtv3|321|qtv|Vu Dao|0901238154|HCM, Q5|qtv3@gmail.com
+A004|qtv4|321|qtv|Kha Tinh Yen|0901239583|HCM, Q5|qtv4@gmail.com
+A005|qtv5|321|qtv|Nguy Moc Mien|0901235050|HCM, Q5|qtv5@gmail.com
+A006|qtv6|321|qtv|Lam Thuy Vy|0901230296|HCM, Q6|qtv6@gmail.com
+A007|qtv7|321|qtv|Tran Giao Nhi|0901234443|HCM, Q1|qtv7@gmail.com
+A008|qtv8|321|qtv|Phung Anh Du|0901236890|HCM, Q7|qtv8@gmail.com
+A009|qtv9|321|qtv|Doan Ngoc Lam|0901230133|HCM, Q10|qtv9@gmail.com
+A010|qtv10|321|qtv|Ha Uyen Nhi|0901235671|HCM, Q2|qtv10@gmail.com
+C001|khachhang01|123|khachhang|Tran Thien Du|0901343380
+C002|khachhang02|123|khachhang|Luc Hao Phong|0901343530
+C003|khachhang03|123|khachhang|Au Duong Lam|0901344406
+C004|khachhang04|123|khachhang|Te Uyen|0901345922
+C005|khachhang05|123|khachhang|Doan Khai Minh|0901340519
+C006|khachhang06|123|khachhang|Vu An Phong|0901341283
+C007|khachhang07|123|khachhang|Nguyen Duy Khang|0901344257
+C008|khachhang08|123|khachhang|Trinh Hoai Nam|0901341863
+C009|khachhang09|123|khachhang|Phan Tuan Vu|0901344439
+C010|khachhang10|123|khachhang|Ta Thien Bao|0901348367

@@ -1,6 +1,0 @@
-A001|admin1|321|admin|Nguyễn An|HCM, Q1|0901234501|a@gmail.com
-A002|admin2|321|admin|Lý Bình|HCM, Q2|0901234502|b@gmail.com
-C001|khach01|123|customer|Nguyễn Văn A|0901234503
-C002|khach02|123|customer|Nguyễn Văn B|0901234504
-C003|khach03|123|customer|Nguyễn Văn C|0901234505
-C004|khach04|123|customer|Nguyễn Văn D|0901234506
