@@ -179,7 +179,6 @@ abstract class NguoiDung {
     // PHUONG THUC TRUU TUONG
     public abstract void hienThiThongTin();
     public abstract void dangXuat();
-    public abstract boolean coQuyen(String quyen);
 
     // PHUONG THUC DANG NHAP
     public static class DangNhap {
@@ -250,7 +249,15 @@ class QTVMenu {
             System.out.println("4. Quan ly lich su thanh toan");
             System.out.println("0. Dang xuat.");
             System.out.print("\nChon: ");
-            luachon = Integer.parseInt(sc.nextLine());
+
+            try {
+                luachon = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so nguyen hop le!");
+                luachon = -1;
+                continue;
+            }
+
             switch (luachon) {
                 case 1:
                     int choice1;
@@ -263,7 +270,13 @@ class QTVMenu {
                         System.out.println("5. Tim kiem nguoi dung");
                         System.out.println("0. Thoat");
                         System.out.print("Chon: ");
-                        choice1 = Integer.parseInt(sc.nextLine());
+                        try {
+                            choice1 = Integer.parseInt(sc.nextLine());
+                        } catch (NumberFormatException e) {
+                            System.out.println("Vui long nhap so nguyen hop le!");
+                            choice1 = -1;
+                            continue;
+                        }
 
                         switch (choice1) {
                             case 1:
@@ -275,7 +288,7 @@ class QTVMenu {
                                 break;
                             case 3:
                                 dsNguoiDung.sua();
-                                ghiDuLieu();
+//                                ghiDuLieu();
                                 break;
                             case 4:
                                 dsNguoiDung.xoa();
@@ -283,6 +296,8 @@ class QTVMenu {
                                 break;
                             case 5:
                                 dsNguoiDung.timKiem();
+                                break;
+                            case 0:
                                 break;
                             default:
                                 System.out.println("Lua chon khong hop le.");
@@ -322,6 +337,8 @@ class QTVMenu {
                             case 5:
                                 dsMonAn.timKiem();
                                 break;
+                            case 0:
+                                break;
                             default:
                                 System.out.println("Lua chon khong hop le.");
                                 break;
@@ -349,6 +366,8 @@ class QTVMenu {
                                 break;
                             case 3:
                                 dsHoaDon.timKiem();
+                                break;
+                            case 0:
                                 break;
                             default:
                                 System.out.println("Lua chon khong hop le.");
@@ -386,6 +405,8 @@ class QTVMenu {
                                 dsThanhToan.capNhatTrangThai();
                                 ghiDuLieu();
                                 break;
+                            case 0:
+                                break;
                             default:
                                 System.out.println("Lua chon khong hop le.");
                                 break;
@@ -414,7 +435,7 @@ class KhachHangMenu {
     private QTVMenu qtvMenu;
 
     public KhachHangMenu(DSMonAn dsMonAn, QTVMenu qtvMenu) {
-        this.dsNguoiDung = new DSNguoiDung();
+        this.dsNguoiDung = qtvMenu.getDsNguoiDung();
         this.dsMonAn = dsMonAn;
         this.gioHang = new GioHang(dsMonAn);
         this.dsHoaDon = qtvMenu.getDsHoaDon();
@@ -436,13 +457,18 @@ class KhachHangMenu {
             System.out.println("7. Thanh toan");
             System.out.println("0. Dang xuat.");
             System.out.print("\nChon: ");
-            luachon = sc.nextInt();
-            sc.nextLine(); // clear buffer
+
+            try {
+                luachon = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so nguyen hop le!");
+                luachon = -1;
+                continue;
+            }
 
             switch (luachon) {
                 case 1:
                     dsNguoiDung.capNhatThongTin(khachHangHienTai);
-                    qtvMenu.ghiDuLieu();
                     break;
                 case 2:
                     dsMonAn.hienThiTatCa();
@@ -460,7 +486,7 @@ class KhachHangMenu {
                         // Hien thi gio hang truoc khi xac nhan
                         gioHang.hienThi();
 
-                        // Cho nguoi dung chon phuong thuc thanh toan
+                        // Chon phuong thuc thanh toan
                         System.out.println("\n===== LUA CHON PHUONG THUC THANH TOAN =====");
                         System.out.println("1. Chuyen khoan");
                         System.out.println("2. Tien mat");
@@ -542,8 +568,19 @@ class KhachHangMenu {
                         }
 
                         System.out.print("Chon hoa don can thanh toan (nhap so thu tu): ");
-                        int luaChonHoaDon = sc.nextInt();
-                        sc.nextLine(); // clear buffer
+                        int luaChonHoaDon = 0;
+                        while (true) {
+                            try {
+                                luaChonHoaDon = Integer.parseInt(sc.nextLine());
+                                if (luaChonHoaDon < 1 || luaChonHoaDon > hoaDonChuaThanhToan.size()) {
+                                    System.out.println("So thu tu khong hop le! Vui long nhap lai: ");
+                                    continue;
+                                }
+                                break;
+                            } catch (NumberFormatException e) {
+                                System.out.println("Vui long nhap so nguyen hop le!");
+                            }
+                        }
 
                         if (luaChonHoaDon > 0 && luaChonHoaDon <= hoaDonChuaThanhToan.size()) {
                             HoaDon hoaDonThanhToan = hoaDonChuaThanhToan.get(luaChonHoaDon - 1);
@@ -551,19 +588,21 @@ class KhachHangMenu {
                             System.out.println("\nTHONG TIN HOA DON:");
                             hoaDonThanhToan.hienThiThongTin();
 
-                            System.out.println("\n===== LUA CHON PHUONG THUC THANH TOAN =====");
-                            System.out.println("1. Chuyen khoan");
-                            System.out.println("2. Tien mat");
-                            System.out.print("Chon phuong thuc thanh toan: ");
-                            int phuongThuc = sc.nextInt();
-                            sc.nextLine(); // clear buffer
-
-                            String phuongThucStr = (phuongThuc == 1) ? "Chuyen khoan" : "Tien mat";
-
                             System.out.print("Xac nhan thanh toan? (y/n): ");
                             String xacNhan = sc.nextLine();
 
                             if (xacNhan.equalsIgnoreCase("y")) {
+                                // Sử dụng phương thức đã chọn từ case 5
+
+                                // Lấy phương thức thanh toán từ thông tin thanh toán đã có
+                                String phuongThucStr = "Chuyen khoan"; // Mặc định
+                                for (ThanhToan tt : qtvMenu.getDsThanhToan().getDSThanhToan()) {
+                                    if (tt.getMaDon().equals(hoaDonThanhToan.getMaDon())) {
+                                        phuongThucStr = tt.getPhuongThuc();
+                                        break;
+                                    }
+                                }
+
                                 // Cap nhat trang thai hoa don
                                 hoaDonThanhToan.setTrangThai("Da thanh toan");
 
@@ -571,7 +610,7 @@ class KhachHangMenu {
                                 for (ThanhToan tt : qtvMenu.getDsThanhToan().getDSThanhToan()) {
                                     if (tt.getMaDon().equals(hoaDonThanhToan.getMaDon())) {
                                         tt.setTrangThai("Thanh cong");
-                                        tt.setPhuongThuc(phuongThucStr);
+                                        // Giữ nguyên phương thức thanh toán đã chọn từ trước
                                         break;
                                     }
                                 }
@@ -637,11 +676,6 @@ class QTV extends NguoiDung {
         System.out.println("Quan tri vien " + this.getHoTen() + " da dang xuat.");
     }
 
-    @Override
-    public boolean coQuyen(String quyen) {
-        return true; // Admin co tat ca quyen
-    }
-
     private static String taoIDTuDong_QTV(DSNguoiDung dsKhachHang) {
         int maxId = 0;
 
@@ -695,11 +729,6 @@ class KhachHang extends NguoiDung {
         System.out.println("Khach hang " + this.getHoTen() + " da dang xuat.");
     }
 
-    @Override
-    public boolean coQuyen(String quyen) {
-        return "xem_menu".equals(quyen) || "dat_mon".equals(quyen) || "xem_don_hang".equals(quyen);
-    }
-
     // PHUONG THUC DANG KY
     public void dangKy() {
         Scanner sc = new Scanner(System.in);
@@ -710,7 +739,7 @@ class KhachHang extends NguoiDung {
         do {
             System.out.print("Nhap ten dang nhap: ");
             String tenDangNhap = sc.nextLine();
-            trungTenDangNhap = kiemTraTrungTenDangNhap(tenDangNhap);
+            trungTenDangNhap = (new DSNguoiDung()).kiemTraTrungTenDangNhap(tenDangNhap);
             if (trungTenDangNhap) {
                 System.out.println("Ten dang nhap da ton tai! Vui long chon ten khac.");
             } else {
@@ -745,17 +774,6 @@ class KhachHang extends NguoiDung {
             }
         }
         return "C" + String.format("%03d", maxId + 1);
-    }
-
-    private boolean kiemTraTrungTenDangNhap(String tenDangNhap) {
-        ArrayList<String> lines = QuanLyFile.docFile("users.txt");
-        for (String line : lines) {
-            String[] data = line.split("\\|");
-            if (data.length >= 2 && data[1].equals(tenDangNhap)) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 
@@ -964,15 +982,6 @@ class DSNguoiDung implements ChucNang {
         return null;
     }
 
-    public NguoiDung timNguoiDungTheoTenDangNhap(String tenDangNhap) {
-        for (NguoiDung nd : dsNguoiDung) {
-            if (nd.getTenDangNhap().equals(tenDangNhap)) {
-                return nd;
-            }
-        }
-        return null;
-    }
-
     public ArrayList<KhachHang> getDanhSachKhachHang() {
         ArrayList<KhachHang> dsKhachHang = new ArrayList<>();
         for (NguoiDung nd : dsNguoiDung) {
@@ -1049,9 +1058,19 @@ class DSNguoiDung implements ChucNang {
                     break;
             }
         } while (luaChon != 0);
+
+        // Thay the doi tuong cu bang moi da cap nhat
+        for (int i = 0; i < dsNguoiDung.size(); i++) {
+            if (dsNguoiDung.get(i).getId().equalsIgnoreCase(nguoiDung.getId())) {
+                dsNguoiDung.set(i, nguoiDung);
+                break;
+            }
+        }
+
+        ghiFile("users.txt");
     }
 
-    private boolean kiemTraTrungTenDangNhap(String tenDangNhap) {
+    public boolean kiemTraTrungTenDangNhap(String tenDangNhap) {
         for (NguoiDung nd : dsNguoiDung) {
             if (nd.getTenDangNhap().equals(tenDangNhap)) {
                 return true;
@@ -1066,10 +1085,6 @@ class DSNguoiDung implements ChucNang {
             }
         }
         return false;
-    }
-
-    public void xoaTatCa() {
-        dsNguoiDung.clear();
     }
 
     public void docFile(String filename) {
@@ -1161,7 +1176,7 @@ class DSMonAn implements ChucNang {
             System.out.println("Chua co mon an nao.");
             return;
         }
-        System.out.printf("%-8s | %-20s | %-15s | %12s | %s\n", "Ma mon", "Ten mon", "Loai", "Gia", "Mo ta");
+        System.out.printf("%-8s | %-20s | %-15s | %-10s | %s\n", "Ma mon", "Ten mon", "Loai", "Gia", "Mo ta");
         System.out.println("----------------------------------------------------------------------------------------");
         for (MonAn m : dsMonAn) {
             m.hienThiThongTin();
@@ -1180,9 +1195,24 @@ class DSMonAn implements ChucNang {
         String tenMon = sc.nextLine();
         System.out.print("Nhap loai mon: ");
         String loai = sc.nextLine();
-        System.out.print("Nhap gia: ");
-        int gia = sc.nextInt();
-        sc.nextLine(); // clear buffer
+
+        // Xu ly nhap gia voi try-catch
+        int gia = 0;
+        boolean nhapGiaHopLe = false;
+        while (!nhapGiaHopLe) {
+            try {
+                System.out.print("Nhap gia: ");
+                gia = Integer.parseInt(sc.nextLine());
+                if (gia <= 0) {
+                    System.out.println("Gia phai lon hon 0! Vui long nhap lai.");
+                    continue;
+                }
+                nhapGiaHopLe = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Gia khong hop le! Vui long nhap so nguyen.");
+            }
+        }
+
         System.out.print("Nhap mo ta: ");
         String moTa = sc.nextLine();
 
@@ -1251,9 +1281,22 @@ class DSMonAn implements ChucNang {
                     System.out.println("Cap nhat loai thanh cong!");
                     break;
                 case 3:
-                    System.out.print("Nhap gia moi: ");
-                    monAn.setGia(sc.nextInt());
-                    sc.nextLine(); // clear buffer
+                    int giaMoi = 0;
+                    boolean nhapGiaMoiHopLe = false;
+                    while (!nhapGiaMoiHopLe) {
+                        try {
+                            System.out.print("Nhap gia moi: ");
+                            giaMoi = Integer.parseInt(sc.nextLine());
+                            if (giaMoi <= 0) {
+                                System.out.println("Gia phai lon hon 0! Vui long nhap lai.");
+                                continue;
+                            }
+                            nhapGiaMoiHopLe = true;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Gia khong hop le! Vui long nhap so nguyen.");
+                        }
+                    }
+                    monAn.setGia(giaMoi);
                     ghiFile("foods.txt");
                     System.out.println("Cap nhat gia thanh cong!");
                     break;
@@ -1376,7 +1419,7 @@ class ChiTietHoaDon {
     private String tenMon;
     private int soLuong;
     private int donGia;
-    private int  thanhTien;
+    private int thanhTien;
 
     public ChiTietHoaDon(String maMon, String tenMon, int soLuong, int donGia) {
         this.maMon = maMon;
@@ -1428,17 +1471,14 @@ class GioHang {
         while (true) {
             System.out.print("Nhap so luong: ");
             try {
-                soLuong = sc.nextInt();
-                sc.nextLine();
-
+                soLuong = Integer.parseInt(sc.nextLine());
                 if (soLuong <= 0) {
                     System.out.println("So luong phai lon hon 0! Vui long nhap lai.");
                     continue;
                 }
                 break;
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 System.out.println("Vui long nhap so nguyen hop le!");
-                sc.nextLine();
             }
         }
 
@@ -1488,7 +1528,7 @@ class GioHang {
         }
 
         // Tao ma don tu dong
-        String maDonMoi = taoMaDonTuDong(dsHoaDon);
+        String maDonMoi = dsHoaDon.taoMaDonTuDong();
 
         // Lay ngay hien tai
         String ngayDat = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -1502,24 +1542,6 @@ class GioHang {
         // Tao don hang moi
         HoaDon hoaDonMoi = new HoaDon(maDonMoi, maKhachHang, ngayDat, "Cho xac nhan", tongTien, new ArrayList<>(dsGioHang));
         return hoaDonMoi;
-    }
-
-    private String taoMaDonTuDong(DSHoaDon dsHoaDon) {
-        int maxId = 0;
-
-        // Tim ma don lon nhat trong danh sach hien tai
-        for (HoaDon hd : dsHoaDon.getDSHoaDon()) {
-            if (hd.getMaDon().startsWith("OD")) {
-                try {
-                    int idNum = Integer.parseInt(hd.getMaDon().substring(2));
-                    if (idNum > maxId) maxId = idNum;
-                } catch (NumberFormatException e) {
-                    // Bo qua neu ID khong dung dinh dang
-                }
-            }
-        }
-
-        return "OD" + String.format("%03d", maxId + 1);
     }
 
     public boolean rong() {
@@ -1537,7 +1559,7 @@ class HoaDon {
     private String maKhachHang;
     private String ngayDat;
     private String trangThai;
-    private int  tongTien;
+    private int tongTien;
     private ArrayList<ChiTietHoaDon> chiTiet;
 
     public HoaDon(String maDon, String maKhachHang, String ngayDat, String trangThai, int  tongTien, ArrayList<ChiTietHoaDon> chiTiet) {
@@ -1605,13 +1627,24 @@ class DSHoaDon implements ChucNang {
 
     @Override
     public void hienThiTatCa() {
-        System.out.println("\n===== DANH SACH HOA DON =====");
         if (dsHoaDon.isEmpty()) {
-            System.out.println("Chua co hoa don nao.");
+            System.out.println("Khong co hoa don nao.");
             return;
         }
+
+        System.out.println("\n===== DANH SACH HOA DON =====");
+        // Định dạng hiển thị danh sách hóa đơn theo dạng bảng
+        System.out.printf("%-8s | %-15s | %-12s | %-15s | %-15s\n",
+                "Ma Don", "Ma KH", "Ngay Dat", "Tong Tien (VND)", "Trang Thai");
+        System.out.println("-------------------------------------------------------------------");
+
         for (HoaDon hd : dsHoaDon) {
-            hd.hienThiThongTin();
+            System.out.printf("%-8s | %-15s | %-12s | %-15s | %-15s\n",
+                    hd.getMaDon(),
+                    hd.getMaKhachHang(),
+                    hd.getNgayDat(),
+                    String.format("%,d", hd.getTongTien()),
+                    hd.getTrangThai());
         }
     }
 
@@ -1640,13 +1673,36 @@ class DSHoaDon implements ChucNang {
             String maMon = sc.nextLine();
             if (maMon.equals("0")) break;
 
+            // try catch cho nhap so luong va don gia
             System.out.print("Nhap so luong: ");
-            int soLuong = sc.nextInt();
-            sc.nextLine(); // clear buffer
+            int soLuong = 0;
+            while (true) {
+                try {
+                    soLuong = Integer.parseInt(sc.nextLine());
+                    if (soLuong <= 0) {
+                        System.out.println("So luong phai lon hon 0! Vui long nhap lai: ");
+                        continue;
+                    }
+                    break;
+                } catch (NumberFormatException e) {
+                    System.out.println("So luong khong hop le! Vui long nhap so nguyen: ");
+                }
+            }
 
             System.out.print("Nhap don gia: ");
-            int donGia = sc.nextInt();
-            sc.nextLine(); // clear buffer
+            int donGia = 0;
+            while (true) {
+                try {
+                    donGia = Integer.parseInt(sc.nextLine());
+                    if (donGia <= 0) {
+                        System.out.println("Don gia phai lon hon 0! Vui long nhap lai: ");
+                        continue;
+                    }
+                    break;
+                } catch (NumberFormatException e) {
+                    System.out.println("Don gia khong hop le! Vui long nhap so nguyen: ");
+                }
+            }
 
             System.out.print("Nhap ten mon: ");
             String tenMon = sc.nextLine();
@@ -1661,10 +1717,8 @@ class DSHoaDon implements ChucNang {
         System.out.println("Them hoa don thanh cong!");
     }
 
-    private String taoMaDonTuDong() {
+    public String taoMaDonTuDong() {
         int maxId = 0;
-
-        // Doc tu file de dam bao co du lieu moi nhat
         ArrayList<String> lines = QuanLyFile.docFile("orders.txt");
         for (String line : lines) {
             String[] data = line.split("\\|");
@@ -1714,7 +1768,7 @@ class DSHoaDon implements ChucNang {
                     System.out.println("Cap nhat trang thai thanh cong!");
                     break;
                 case 2:
-                    capNhatChiTietHoaDon(hoaDon);
+                    capNhatChiTietDonHang(hoaDon);
                     break;
                 case 0:
                     System.out.println("Thoat cap nhat.");
@@ -1726,7 +1780,7 @@ class DSHoaDon implements ChucNang {
         } while (luaChon != 0);
     }
 
-    private void capNhatChiTietHoaDon(HoaDon hoaDon) {
+    private void capNhatChiTietDonHang(HoaDon hoaDon) {
         System.out.println("\n==== CAP NHAT CHI TIET DON HANG ====");
         ArrayList<ChiTietHoaDon> chiTiet = hoaDon.getChiTiet();
 
@@ -1750,10 +1804,10 @@ class DSHoaDon implements ChucNang {
             String tenMon = sc.nextLine();
             System.out.print("Nhap so luong: ");
             int soLuong = sc.nextInt();
-            sc.nextLine(); // clear buffer
+            sc.nextLine();
             System.out.print("Nhap don gia: ");
             int donGia = sc.nextInt();
-            sc.nextLine(); // clear buffer
+            sc.nextLine();
 
             ChiTietHoaDon cthdMoi = new ChiTietHoaDon(maMon, tenMon, soLuong, donGia);
             chiTiet.add(cthdMoi);
@@ -1764,7 +1818,7 @@ class DSHoaDon implements ChucNang {
             ChiTietHoaDon cthd = chiTiet.get(index-1);
             System.out.print("Nhap so luong moi: ");
             int soLuongMoi = sc.nextInt();
-            sc.nextLine(); // clear buffer
+            sc.nextLine();
             cthd.setSoLuong(soLuongMoi);
             System.out.println("Cap nhat so luong thanh cong!");
 
@@ -1839,7 +1893,6 @@ class DSHoaDon implements ChucNang {
         }
     }
 
-    // Doc du lieu tu file
     public void docFile(String filename) {
         ArrayList<String> lines = QuanLyFile.docFile(filename);
         dsHoaDon.clear();
@@ -1884,7 +1937,6 @@ class DSHoaDon implements ChucNang {
         }
     }
 
-    // Ghi du lieu vao file
     public void ghiFile(String filename) {
         ArrayList<String> oldLines = QuanLyFile.docFile(filename);
         ArrayList<String> newlines = new ArrayList<>();
@@ -1980,9 +2032,22 @@ class DSThanhToan implements ChucNang {
         String maDon = sc.nextLine();
         System.out.print("Nhap ngay giao dich (dd/MM/yyyy): ");
         String ngayGiaoDich = sc.nextLine();
+
         System.out.print("Nhap so tien: ");
-        int soTien = sc.nextInt();
-        sc.nextLine(); // clear buffer
+        int soTien = 0;
+        while (true) {
+            try {
+                soTien = Integer.parseInt(sc.nextLine());
+                if (soTien <= 0) {
+                    System.out.println("So tien phai lon hon 0! Vui long nhap lai: ");
+                    continue;
+                }
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("So tien khong hop le! Vui long nhap so nguyen: ");
+            }
+        }
+
         System.out.print("Nhap phuong thuc: ");
         String phuongThuc = sc.nextLine();
         System.out.print("Nhap trang thai: ");
@@ -2100,7 +2165,6 @@ class DSThanhToan implements ChucNang {
         }
     }
 
-    // Tim kiem theo khoang thoi gian
     public void timKiemTheoKhoangThoiGian() {
         System.out.println("\n===== TIM KIEM THEO KHOANG THOI GIAN =====");
         System.out.print("Nhap ngay bat dau (dd/MM/yyyy): ");
@@ -2149,7 +2213,6 @@ class DSThanhToan implements ChucNang {
         System.out.println("Tong doanh thu: " + String.format("%,d", tongDoanhThu) + " VND");
     }
 
-    // Doc du lieu tu file
     public void docFile(String filename) {
         ArrayList<String> lines = QuanLyFile.docFile(filename);
         dsThanhToan.clear();
@@ -2177,7 +2240,6 @@ class DSThanhToan implements ChucNang {
         System.out.println("Doc du lieu thanh toan thanh cong! " + dsThanhToan.size() + " giao dich");
     }
 
-    // Ghi du lieu vao file
     public void ghiFile(String filename) {
         ArrayList<String> oldLines = QuanLyFile.docFile(filename);
         ArrayList<String> newlines = new ArrayList<>();
