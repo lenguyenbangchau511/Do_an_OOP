@@ -1,6 +1,5 @@
 import java.util.*;
 import java.io.*;
-import java.time.LocalDate;
 
 public class Do_an {
     public static void main(String[] args) {
@@ -651,9 +650,9 @@ class KhachHangMenu {
                                 System.out.println("====================================");
                             } else if (xacNhan.equalsIgnoreCase("n")) {
                                 System.out.println("Da huy thanh toan!");
+                            } else {
+                                System.out.println("Lua chon khong hop le!");
                             }
-                        } else {
-                            System.out.println("Lua chon khong hop le!");
                         }
                     }
                     break;
@@ -852,17 +851,30 @@ class DSNguoiDung implements ChucNang {
     @Override
     public void them() {
         System.out.println("\n===== THEM NGUOI DUNG MOI =====");
-        System.out.println("1. Them quan tri vien");
-        System.out.println("2. Them khach hang");
-        System.out.print("Chon loai nguoi dung: ");
-        int luaChon = Integer.parseInt(sc.nextLine());
 
-        if (luaChon == 1) {
-            themQTV();
-        } else if (luaChon == 2) {
-            themKhachHang();
-        } else {
-            System.out.println("Lua chon khong hop le!");
+        int luaChon;
+        boolean nhapHopLe = false;
+
+        while (!nhapHopLe) {
+            System.out.println("1. Them quan tri vien");
+            System.out.println("2. Them khach hang");
+            System.out.print("Chon loai nguoi dung: ");
+
+            try {
+                luaChon = Integer.parseInt(sc.nextLine());
+
+                if (luaChon == 1) {
+                    themQTV();
+                    nhapHopLe = true;
+                } else if (luaChon == 2) {
+                    themKhachHang();
+                    nhapHopLe = true;
+                } else {
+                    System.out.println("Lua chon khong hop le! Vui long chon 1 hoac 2.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so nguyen hop le!");
+            }
         }
     }
 
@@ -1031,7 +1043,7 @@ class DSNguoiDung implements ChucNang {
 
     // khach dung
     public void capNhatThongTin(NguoiDung nguoiDung) {
-        int luaChon;
+        int luachon;
         do {
             System.out.println("\n==== CAP NHAT THONG TIN NGUOI DUNG ====");
             System.out.println("1. Doi ten: " + nguoiDung.getHoTen());
@@ -1045,9 +1057,16 @@ class DSNguoiDung implements ChucNang {
 
             System.out.println("0. Thoat");
             System.out.print("\nChon thong tin can chinh sua: ");
-            luaChon = Integer.parseInt(sc.nextLine());
 
-            switch (luaChon) {
+            try {
+                luachon = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so nguyen hop le!");
+                luachon = -1;
+                continue;
+            }
+
+            switch (luachon) {
                 case 1:
                     System.out.print("Nhap ten moi: ");
                     nguoiDung.setHoTen(sc.nextLine());
@@ -1084,7 +1103,7 @@ class DSNguoiDung implements ChucNang {
                     System.out.println("Lua chon khong hop le!");
                     break;
             }
-        } while (luaChon != 0);
+        } while (luachon != 0);
 
         // Thay the doi tuong cu bang moi da cap nhat
         for (int i = 0; i < dsNguoiDung.size(); i++) {
@@ -1283,7 +1302,7 @@ class DSMonAn implements ChucNang {
             return;
         }
 
-        int luaChon;
+        int luachon;
         do {
             System.out.println("\n==== CAP NHAT THONG TIN MON AN ====");
             System.out.println("1. Doi ten: " + monAn.getTenMon());
@@ -1292,9 +1311,15 @@ class DSMonAn implements ChucNang {
             System.out.println("4. Doi mo ta: " + monAn.getMoTa());
             System.out.println("0. Thoat");
             System.out.print("\nChon thong tin can chinh sua: ");
-            luaChon = Integer.parseInt(sc.nextLine());
+            try {
+                luachon = Integer.parseInt(sc.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so nguyen hop le!");
+                luachon = -1;
+                continue;
+            }
 
-            switch (luaChon) {
+            switch (luachon) {
                 case 1:
                     System.out.print("Nhap ten moi: ");
                     monAn.setTenMon(sc.nextLine());
@@ -1340,7 +1365,7 @@ class DSMonAn implements ChucNang {
                     System.out.println("Lua chon khong hop le!");
                     break;
             }
-        } while (luaChon != 0);
+        } while (luachon != 0);
     }
 
     @Override
