@@ -18,3 +18,4 @@ C007|khachhang07|123|khachhang|Nguyen Duy Khang|0901344257
 C008|khachhang08|123|khachhang|Trinh Hoai Nam|0901341863
 C009|khachhang09|123|khachhang|Phan Tuan Vu|0901344439
 C010|khachhang10|123|khachhang|Ta Thien Bao|0901348367
+C011|haha|haha|khachhang|haha|haha
