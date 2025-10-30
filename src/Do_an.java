@@ -498,163 +498,13 @@ class KhachHangMenu {
                     gioHang.hienThi();
                     break;
                 case 5:
-                    if (gioHang.rong()) {
-                        System.out.println("Gio hang trong!");
-                    } else {
-                        // Hien thi gio hang truoc khi xac nhan
-                        gioHang.hienThi();
-
-                        // Chon phuong thuc thanh toan
-                        int phuongThucChoice;
-                        System.out.println("\n===== LUA CHON PHUONG THUC THANH TOAN =====");
-                        System.out.println("1. Chuyen khoan");
-                        System.out.println("2. Tien mat");
-                        System.out.print("Chon phuong thuc thanh toan: ");
-                        try {
-                            phuongThucChoice = Integer.parseInt(sc.nextLine());
-                        } catch (NumberFormatException e) {
-                            System.out.println("Vui long nhap so nguyen hop le!");
-                            phuongThucChoice = -1;
-                            continue;
-                        }
-
-                        String phuongThucStr = "";
-                        if (phuongThucChoice == 1) {
-                            phuongThucStr = "Chuyen khoan";
-                        } else if (phuongThucChoice == 2) {
-                            phuongThucStr = "Tien mat";
-                        } else {
-                            System.out.println("Lua chon khong hop le, mac dinh la Chuyen khoan");
-                            phuongThucStr = "Chuyen khoan";
-                        }
-
-                        System.out.print("Ban co chac chan muon dat hang? (y/n): ");
-                        String xacNhan = sc.nextLine();
-
-                        if (xacNhan.equalsIgnoreCase("y")) {
-                            HoaDon hoaDonMoi = gioHang.xacNhanDon(khachHangHienTai.getId(), qtvMenu.getDsHoaDon());
-                            if (hoaDonMoi != null) {
-                                try {
-                                    // Them don hang vao danh sach
-                                    qtvMenu.getDsHoaDon().themHoaDon(hoaDonMoi);
-                                    System.out.println("Da them don hang vao danh sach!");
-
-                                    // Tao thanh toan tu don hang VOI PHUONG THUC DA CHON
-                                    qtvMenu.getDsThanhToan().themThanhToanTuHoaDon(hoaDonMoi, phuongThucStr);
-                                    System.out.println("Da tao thong tin thanh toan!");
-
-                                    // Luu du lieu
-                                    qtvMenu.ghiDuLieu();
-
-                                    System.out.println("====================================");
-                                    System.out.println("DAT HANG THANH CONG!");
-                                    System.out.println("Ma don hang: " + hoaDonMoi.getMaDon());
-                                    System.out.println("Tong tien: " + hoaDonMoi.getTongTien() + " VND");
-                                    System.out.println("Phuong thuc thanh toan: " + phuongThucStr);
-                                    System.out.println("Trang thai: " + hoaDonMoi.getTrangThai());
-                                    System.out.println("====================================");
-
-                                    // Xoa gio hang sau khi dat hang thanh cong
-                                    gioHang.xoaGioHang();
-
-                                } catch (Exception e) {
-                                    System.out.println("Loi khi luu don hang: " + e.getMessage());
-                                }
-                            } else if (xacNhan.equalsIgnoreCase("n")) {
-                                System.out.println("Da huy dat hang!");
-                            }
-                        } else {
-                            System.out.println("Khong the tao don hang!");
-                        }
-                    }
+                    gioHang.xacNhanDatHang(khachHangHienTai.getId(), dsHoaDon, qtvMenu.getDsThanhToan(), qtvMenu, sc);
                     break;
                 case 6:
                     dsHoaDon.hienThiHoaDonKhachHang(khachHangHienTai.getId());
                     break;
                 case 7:
-                    // Hien thi hoa don chua thanh toan cua khach hang
-                    ArrayList<HoaDon> hoaDonChuaThanhToan = new ArrayList<>();
-                    for (HoaDon hd : qtvMenu.getDsHoaDon().getDSHoaDon()) {
-                        if (hd.getMaKhachHang().equals(khachHangHienTai.getId()) &&
-                                !hd.getTrangThai().equals("Da thanh toan")) {
-                            hoaDonChuaThanhToan.add(hd);
-                        }
-                    }
-
-                    if (hoaDonChuaThanhToan.isEmpty()) {
-                        System.out.println("Khong co hoa don nao can thanh toan.");
-                    } else {
-                        System.out.println("\n===== HOA DON CAN THANH TOAN =====");
-                        for (int i = 0; i < hoaDonChuaThanhToan.size(); i++) {
-                            System.out.println((i + 1) + ". Ma don: " + hoaDonChuaThanhToan.get(i).getMaDon() +
-                                    " - Tong tien: " + String.format("%,d", hoaDonChuaThanhToan.get(i).getTongTien()) + " VND" +
-                                    " - Trang thai: " + hoaDonChuaThanhToan.get(i).getTrangThai());
-                        }
-
-                        System.out.print("Chon hoa don can thanh toan (nhap so thu tu): ");
-                        int luaChonHoaDon = 0;
-                        while (true) {
-                            try {
-                                luaChonHoaDon = Integer.parseInt(sc.nextLine());
-                                if (luaChonHoaDon < 1 || luaChonHoaDon > hoaDonChuaThanhToan.size()) {
-                                    System.out.println("So thu tu khong hop le! Vui long nhap lai. ");
-                                    continue;
-                                }
-                                break;
-                            } catch (NumberFormatException e) {
-                                System.out.println("Vui long nhap so nguyen hop le!");
-                            }
-                        }
-
-                        if (luaChonHoaDon > 0 && luaChonHoaDon <= hoaDonChuaThanhToan.size()) {
-                            HoaDon hoaDonThanhToan = hoaDonChuaThanhToan.get(luaChonHoaDon - 1);
-
-                            System.out.println("\nTHONG TIN HOA DON:");
-                            hoaDonThanhToan.hienThiThongTin();
-
-                            System.out.print("Xac nhan thanh toan? (y/n): ");
-                            String xacNhan = sc.nextLine();
-
-                            if (xacNhan.equalsIgnoreCase("y")) {
-                                // Sử dụng phương thức đã chọn từ case 5
-
-                                // Lấy phương thức thanh toán từ thông tin thanh toán đã có
-                                String phuongThucStr = "Chuyen khoan"; // Mặc định
-                                for (ThanhToan tt : qtvMenu.getDsThanhToan().getDSThanhToan()) {
-                                    if (tt.getMaDon().equals(hoaDonThanhToan.getMaDon())) {
-                                        phuongThucStr = tt.getPhuongThuc();
-                                        break;
-                                    }
-                                }
-
-                                // Cap nhat trang thai hoa don
-                                hoaDonThanhToan.setTrangThai("Da thanh toan");
-
-                                // Cap nhat trang thai thanh toan tuong ung
-                                for (ThanhToan tt : qtvMenu.getDsThanhToan().getDSThanhToan()) {
-                                    if (tt.getMaDon().equals(hoaDonThanhToan.getMaDon())) {
-                                        tt.setTrangThai("Thanh cong");
-                                        // Giữ nguyên phương thức thanh toán đã chọn từ trước
-                                        break;
-                                    }
-                                }
-
-                                // Luu du lieu
-                                qtvMenu.ghiDuLieu();
-
-                                System.out.println("====================================");
-                                System.out.println("THANH TOAN THANH CONG!");
-                                System.out.println("Ma don: " + hoaDonThanhToan.getMaDon());
-                                System.out.println("So tien: " + String.format("%,d", hoaDonThanhToan.getTongTien()) + " VND");
-                                System.out.println("Phuong thuc: " + phuongThucStr);
-                                System.out.println("====================================");
-                            } else if (xacNhan.equalsIgnoreCase("n")) {
-                                System.out.println("Da huy thanh toan!");
-                            } else {
-                                System.out.println("Lua chon khong hop le!");
-                            }
-                        }
-                    }
+                    qtvMenu.getDsThanhToan().xuLyThanhToan(khachHangHienTai.getId(), dsHoaDon, qtvMenu, sc);
                     break;
                 case 0:
                     khachHangHienTai.dangXuat();
@@ -1612,27 +1462,71 @@ class GioHang {
         System.out.printf("TONG TIEN: %s\n", String.format("%,d", tongTien) + " VND");
     }
 
-    public HoaDon xacNhanDon(String maKhachHang, DSHoaDon dsHoaDon) {
-        if (dsGioHang.isEmpty()) {
-            System.out.println("Gio hang trong, khong the dat hang!");
-            return null;
+    public void xacNhanDatHang(String maKhachHang, DSHoaDon dsHoaDon, DSThanhToan dsThanhToan, QTVMenu qtvMenu, Scanner sc) {
+        if (this.rong()) {
+            System.out.println("Gio hang trong!");
+            return;
         }
 
-        // Tao ma don tu dong
-        String maDonMoi = dsHoaDon.taoMaDonTuDong();
+        // Hien thi gio hang truoc khi xac nhan
+        this.hienThi();
 
-        // Lay ngay hien tai
-        String ngayDat = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-
-        // Tinh tong tien
-        int tongTien = 0;
-        for (ChiTietHoaDon item : dsGioHang) {
-            tongTien += item.getThanhTien();
+        // Chon phuong thuc thanh toan
+        String phuongThucStr = dsThanhToan.chonPhuongThucThanhToan(sc);
+        if (phuongThucStr == null) {
+            return; // Người dùng đã hủy
         }
 
-        // Tao don hang moi
-        HoaDon hoaDonMoi = new HoaDon(maDonMoi, maKhachHang, ngayDat, "Cho xac nhan", tongTien, new ArrayList<>(dsGioHang));
-        return hoaDonMoi;
+        System.out.print("Ban co chac chan muon dat hang? (y/n): ");
+        String xacNhan = sc.nextLine();
+
+        if (xacNhan.equalsIgnoreCase("y")) {
+            // Tao ma don tu dong
+            String maDonMoi = dsHoaDon.taoMaDonTuDong();
+
+            // Lay ngay hien tai
+            String ngayDat = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+            // Tinh tong tien
+            int tongTien = 0;
+            for (ChiTietHoaDon item : dsGioHang) {
+                tongTien += item.getThanhTien();
+            }
+
+            // Tao don hang moi
+            HoaDon hoaDonMoi = new HoaDon(maDonMoi, maKhachHang, ngayDat, "Cho xac nhan", tongTien, new ArrayList<>(dsGioHang));
+
+            try {
+                // Them don hang vao danh sach
+                dsHoaDon.themHoaDon(hoaDonMoi);
+                System.out.println("Da them don hang vao danh sach!");
+
+                // Tao thanh toan tu don hang VOI PHUONG THUC DA CHON
+                dsThanhToan.themThanhToanTuHoaDon(hoaDonMoi, phuongThucStr);
+                System.out.println("Da tao thong tin thanh toan!");
+
+                // Luu du lieu
+                qtvMenu.ghiDuLieu();
+
+                System.out.println("====================================");
+                System.out.println("DAT HANG THANH CONG!");
+                System.out.println("Ma don hang: " + hoaDonMoi.getMaDon());
+                System.out.println("Tong tien: " + hoaDonMoi.getTongTien() + " VND");
+                System.out.println("Phuong thuc thanh toan: " + phuongThucStr);
+                System.out.println("Trang thai: " + hoaDonMoi.getTrangThai());
+                System.out.println("====================================");
+
+                // Xoa gio hang sau khi dat hang thanh cong
+                this.xoaGioHang();
+
+            } catch (Exception e) {
+                System.out.println("Loi khi luu don hang: " + e.getMessage());
+            }
+        } else if (xacNhan.equalsIgnoreCase("n")) {
+            System.out.println("Da huy dat hang!");
+        } else {
+            System.out.println("Lua chon khong hop le!");
+        }
     }
 
     public boolean rong() {
@@ -2357,6 +2251,119 @@ class DSThanhToan implements ChucNang {
 
         System.out.println("Tong so giao dich: " + soGiaoDich);
         System.out.println("Tong doanh thu: " + String.format("%,d", tongDoanhThu) + " VND");
+    }
+
+    public String chonPhuongThucThanhToan(Scanner sc) {
+        int phuongThucChoice;
+        System.out.println("\n===== LUA CHON PHUONG THUC THANH TOAN =====");
+        System.out.println("1. Chuyen khoan");
+        System.out.println("2. Tien mat");
+        System.out.println("0. Huy");
+        System.out.print("Chon phuong thuc thanh toan: ");
+
+        try {
+            phuongThucChoice = Integer.parseInt(sc.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Vui long nhap so nguyen hop le!");
+            return null;
+        }
+
+        switch (phuongThucChoice) {
+            case 1:
+                return "Chuyen khoan";
+            case 2:
+                return "Tien mat";
+            case 0:
+                System.out.println("Da huy chon phuong thuc thanh toan!");
+                return null;
+            default:
+                System.out.println("Lua chon khong hop le, mac dinh la Chuyen khoan");
+                return "Chuyen khoan";
+        }
+    }
+
+    public void xuLyThanhToan(String maKhachHang, DSHoaDon dsHoaDon, QTVMenu qtvMenu, Scanner sc) {
+        // Hien thi hoa don chua thanh toan cua khach hang
+        ArrayList<HoaDon> hoaDonChuaThanhToan = new ArrayList<>();
+        for (HoaDon hd : dsHoaDon.getDSHoaDon()) {
+            if (hd.getMaKhachHang().equals(maKhachHang) &&
+                    !hd.getTrangThai().equals("Da thanh toan")) {
+                hoaDonChuaThanhToan.add(hd);
+            }
+        }
+
+        if (hoaDonChuaThanhToan.isEmpty()) {
+            System.out.println("Khong co hoa don nao can thanh toan.");
+            return;
+        }
+
+        System.out.println("\n===== HOA DON CAN THANH TOAN =====");
+        for (int i = 0; i < hoaDonChuaThanhToan.size(); i++) {
+            System.out.println((i + 1) + ". Ma don: " + hoaDonChuaThanhToan.get(i).getMaDon() +
+                    " - Tong tien: " + String.format("%,d", hoaDonChuaThanhToan.get(i).getTongTien()) + " VND" +
+                    " - Trang thai: " + hoaDonChuaThanhToan.get(i).getTrangThai());
+        }
+
+        System.out.print("Chon hoa don can thanh toan (nhap so thu tu): ");
+        int luaChonHoaDon = 0;
+        while (true) {
+            try {
+                luaChonHoaDon = Integer.parseInt(sc.nextLine());
+                if (luaChonHoaDon < 1 || luaChonHoaDon > hoaDonChuaThanhToan.size()) {
+                    System.out.println("So thu tu khong hop le! Vui long nhap lai. ");
+                    continue;
+                }
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so nguyen hop le!");
+            }
+        }
+
+        if (luaChonHoaDon > 0 && luaChonHoaDon <= hoaDonChuaThanhToan.size()) {
+            HoaDon hoaDonThanhToan = hoaDonChuaThanhToan.get(luaChonHoaDon - 1);
+
+            System.out.println("\nTHONG TIN HOA DON:");
+            hoaDonThanhToan.hienThiThongTin();
+
+            System.out.print("Xac nhan thanh toan? (y/n): ");
+            String xacNhan = sc.nextLine();
+
+            if (xacNhan.equalsIgnoreCase("y")) {
+                // Lấy phương thức thanh toán từ thông tin thanh toán đã có
+                String phuongThucStr = "Chuyen khoan"; // Mặc định
+                for (ThanhToan tt : this.getDSThanhToan()) {
+                    if (tt.getMaDon().equals(hoaDonThanhToan.getMaDon())) {
+                        phuongThucStr = tt.getPhuongThuc();
+                        break;
+                    }
+                }
+
+                // Cap nhat trang thai hoa don
+                hoaDonThanhToan.setTrangThai("Da thanh toan");
+
+                // Cap nhat trang thai thanh toan tuong ung
+                for (ThanhToan tt : this.getDSThanhToan()) {
+                    if (tt.getMaDon().equals(hoaDonThanhToan.getMaDon())) {
+                        tt.setTrangThai("Thanh cong");
+                        break;
+                    }
+                }
+
+                // Luu du lieu
+                qtvMenu.ghiDuLieu();
+
+                System.out.println("====================================");
+                System.out.println("THANH TOAN THANH CONG!");
+                System.out.println("Ma don: " + hoaDonThanhToan.getMaDon());
+                System.out.println("So tien: " + String.format("%,d", hoaDonThanhToan.getTongTien()) + " VND");
+                System.out.println("Phuong thuc: " + phuongThucStr);
+                System.out.println("====================================");
+            } else if (xacNhan.equalsIgnoreCase("n")) {
+                System.out.println("Da huy thanh toan!");
+            } else {
+                System.out.println("Lua chon khong hop le!");
+            }
+        }
     }
 
     public void docFile(String filename) {
